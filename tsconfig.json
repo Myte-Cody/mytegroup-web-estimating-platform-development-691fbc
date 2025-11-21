@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "baseUrl": "."
+  },
+  "include": ["app/**/*","next-env.d.ts","**/*.ts","**/*.tsx","**/*.js"],
+  "exclude": ["node_modules"]
+}
