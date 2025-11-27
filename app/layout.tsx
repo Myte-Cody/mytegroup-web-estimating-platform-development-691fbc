@@ -2,8 +2,6 @@ import './globals.css'
 
 import type { Metadata } from 'next'
 
-import SiteFooter from './components/SiteFooter'
-import SiteHeader from './components/SiteHeader'
 import { siteUrl, domainConfig } from './config/domain'
 
 const title = 'MYTE Sovereign OS | Structural Steel'
@@ -176,14 +174,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
 
-      <body className="app-body">
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
-        <SiteHeader />
-        {children}
-        <SiteFooter />
-      </body>
+      <body className="app-body">{children}</body>
     </html>
   )
 }
