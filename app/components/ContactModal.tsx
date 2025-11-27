@@ -62,8 +62,8 @@ export default function ContactModal({ open, onClose }: Props) {
   const domain = useMemo(() => emailDomain(email), [email])
   const isPersonal = useMemo(() => domain !== '' && PERSONAL_EMAIL_DOMAINS.has(domain), [domain])
   const emailIsValid = useMemo(() => emailRegex.test(normalizedEmail), [normalizedEmail])
-  const requiresVerification = emailIsValid && isPersonal
-  const emailVerified = !requiresVerification || verificationStatus === 'verified'
+  const requiresVerification = emailIsValid
+  const emailVerified = verificationStatus === 'verified'
 
   const nameError =
     name.trim().length === 0
@@ -96,17 +96,8 @@ export default function ContactModal({ open, onClose }: Props) {
     setVerificationError(null)
     setVerificationMessage(null)
     setVerificationCode('')
-    if (!emailIsValid) {
-      setVerificationStatus('idle')
-      setJoinWaitlist(false)
-      return
-    }
-    if (requiresVerification) {
-      setVerificationStatus('idle')
-      setJoinWaitlist(false)
-    } else {
-      setVerificationStatus('verified')
-    }
+    setVerificationStatus('idle')
+    setJoinWaitlist(false)
   }, [normalizedEmail, emailIsValid, requiresVerification, open])
 
   useEffect(() => {
@@ -151,11 +142,6 @@ export default function ContactModal({ open, onClose }: Props) {
       setVerificationError('Enter a valid email address before verifying.')
       return
     }
-    if (!requiresVerification) {
-      setVerificationStatus('verified')
-      setVerificationMessage('Company email recognized. Verification not required.')
-      return
-    }
     setVerifyLoading(true)
     setVerificationError(null)
     try {
@@ -163,12 +149,15 @@ export default function ContactModal({ open, onClose }: Props) {
         method: 'POST',
         body: JSON.stringify({ name: name.trim(), email: normalizedEmail }),
       })
-      if (result.status === 'verified') {
-        setVerificationStatus('verified')
-        setVerificationMessage('Company email verified automatically.')
-      } else {
+      if (result.status === 'sent' || result.status === 'ok') {
         setVerificationStatus('sent')
         setVerificationMessage(`We've emailed a 6-digit code to ${normalizedEmail}. Enter it below to verify.`)
+      } else if (result.status === 'verified') {
+        // Edge case: backend may decide an email is already verified, but we still show as verified.
+        setVerificationStatus('verified')
+        setVerificationMessage('Email already verified for this address.')
+      } else {
+        setVerificationStatus('sent')
       }
     } catch (err: any) {
       const message =
@@ -335,7 +324,6 @@ export default function ContactModal({ open, onClose }: Props) {
                   <div className="contact-chip success">
                     <MailCheck size={16} />
                     <span>Email verified</span>
-                    {!requiresVerification && <span className="muted">Company email auto-verified</span>}
                   </div>
                 ) : (
                   <div className="contact-chip warning">
@@ -382,7 +370,7 @@ export default function ContactModal({ open, onClose }: Props) {
               </div>
             </div>
 
-            {!requiresVerification && emailIsValid && (
+            {emailIsValid && !isPersonal && (
               <div className="contact-optin">
                 <label className="contact-checkbox">
                   <input
@@ -393,7 +381,7 @@ export default function ContactModal({ open, onClose }: Props) {
                   <div>
                     <div className="font-semibold text-[color:var(--text)]">Also join the waitlist</div>
                     <div className="contact-helper">
-                      Company email detected. We can add you to the waitlist with the same email.
+                      Company email detected. We can add you to the waitlist with the same verified email.
                     </div>
                   </div>
                 </label>
@@ -414,6 +402,13 @@ export default function ContactModal({ open, onClose }: Props) {
             )}
 
             {submitError && <div className="contact-error">{submitError}</div>}
+
+            {emailIsValid && isPersonal && (
+              <div className="contact-helper">
+                This email can be used to contact MYTE, but waitlist seats are reserved for company domains. Use your work
+                email if you want to join the waitlist and claim free seats.
+              </div>
+            )}
 
             <div className="contact-actions">
               <button
