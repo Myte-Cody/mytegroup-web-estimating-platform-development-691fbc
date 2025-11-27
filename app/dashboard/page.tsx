@@ -1,46 +1,67 @@
 'use client'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import '../../app/globals.css'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ApiError, apiFetch } from '../lib/api'
+
+type SessionUser = {
+  id?: string
+  email?: string
+  role?: string
+  orgId?: string
+}
 
 export default function DashboardPage() {
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const path = usePathname()
-  // const pid = searchParams.get('projectId')
-  // const valid = pid === process.env.NEXT_PUBLIC_PROJECT_ID
+  const [user, setUser] = useState<SessionUser | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // useEffect(() => {
-  //   // direct access guard
-  //   if (!valid) {
-  //     router.replace(`/auth`)
-  //   }
-  // }, [])
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await apiFetch<{ user?: SessionUser }>('/auth/me')
+        setUser(res?.user || null)
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          router.replace('/auth/login')
+          return
+        }
+        setError(err instanceof ApiError ? err.message : 'Unable to load your workspace.')
+      }
+    }
+    load()
+  }, [router])
 
-  // if (!valid) return null
   return (
-    <div className="container mx-auto p-6">
-      <h1>Dashboard</h1>
-      <p className="text-gray-600">
-        Welcome to your dashboard. This is a starting point for your application.
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-2">Card Title 1</h2>
-          <p className="text-gray-600">Card content goes here.</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-2">Card Title 2</h2>
-          <p className="text-gray-600">Card content goes here.</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-2">Card Title 3</h2>
-          <p className="text-gray-600">Card content goes here.</p>
-        </div>
+    <main className="dashboard-shell">
+      <div className="ambient ambient-one" />
+      <div className="ambient ambient-two" />
+      <div className="dashboard-grid">
+        <section className="glass-card">
+          <div className="badge">Protected area</div>
+          <h1>Workspace</h1>
+          <p className="subtitle">
+            {user ? 'You are signed in. Explore projects, invites, and compliance tasks.' : 'Checking your session...'}
+          </p>
+          {error && <div className="feedback error">{error}</div>}
+          {user && (
+            <div className="info-grid">
+              <div className="info-block">
+                <div className="muted">User</div>
+                <div className="stat-value">{user.email || user.id}</div>
+              </div>
+              <div className="info-block">
+                <div className="muted">Role</div>
+                <div className="stat-value">{user.role || 'User'}</div>
+              </div>
+              <div className="info-block">
+                <div className="muted">Org</div>
+                <div className="stat-value">{user.orgId || 'Scoped'}</div>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
-  );
+    </main>
+  )
 }

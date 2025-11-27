@@ -1,0 +1,41 @@
+
+> mytegroup-web-estimating-platform-development-691fbc@1.0.0 dev
+> next dev -p 6666 --hostname 0.0.0.0 --port 3002
+
+ ΓÜá Invalid next.config.mjs options detected: 
+ ΓÜá     Unrecognized key(s) in object: 'appDir' at "experimental"
+ ΓÜá See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ΓÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\ahmed\Documents\github\C0015-Myte-Constructon\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\ahmed\Documents\github\C0015-Myte-Constructon\mytegroup-web-estimating-platform-development-691fbc\package-lock.json
+
+   Γû▓ Next.js 15.5.6
+   - Local:        http://localhost:3002
+   - Network:      http://0.0.0.0:3002
+   - Experiments (use with caution):
+     Γ£ô appDir
+
+ Γ£ô Starting...
+
+   We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+   The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+   	- lib was set to dom,dom.iterable,esnext
+   	- allowJs was set to true
+   	- skipLibCheck was set to true
+   	- noEmit was set to true
+   	- incremental was set to true
+   	- include was updated to add '.next/types/**/*.ts'
+   	- plugins was updated to add { name: 'next' }
+
+   The following mandatory changes were made to your tsconfig.json:
+
+   	- esModuleInterop was set to true (requirement for SWC / babel)
+   	- resolveJsonModule was set to true (to match webpack resolution)
+   	- isolatedModules was set to true (requirement for SWC / Babel)
+
+ Γ£ô Ready in 17.3s
+   Reload env: .env.local
