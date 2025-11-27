@@ -60,15 +60,16 @@ const personas: Persona[] = [
   {
     id: 'estimators',
     label: 'Estimators',
-    tagline: 'ISO-ready bids, approvals intact',
-    intro: 'Manage bids with ISO-ready forms, connection analysis, and 3D visuals from your 2D take-off. Every revision and approval reason is logged.',
+    tagline: 'ISO-ready bids, human-approved',
+    intro:
+      'Build bids with ISO-ready forms, connection analysis context, and 3D previews linked to your 2D take-off. Every revision and approval reason is logged.',
     bullets: [
-      'Complete ISO review forms and connection analysis packages for expert review.',
-      'Instantly generate 3D bid visuals from your 2D take-off.',
-      'All bid versions are transparent, with reviewer notes and approval reasons tracked.',
-      'Sales reps and service providers use the same bid platform.',
+      'Complete ISO review forms and assemble connection analysis packets for expert review—AI assists, but your team approves.',
+      'Use 3D previews linked to your 2D take-off so reviewers see context, not just line items—no black-box automation.',
+      'Keep every bid version transparent, with reviewer notes and approval reasons tracked for audit and compliance.',
+      'Let sales reps and service providers work from the same bid record without breaking the audit trail or losing control.',
     ],
-    tags: ['ISO-ready bids', 'Audit trail', '3D visuals'],
+    tags: ['ISO-ready bids', 'Audit trail', '3D previews'],
     icon: Calculator,
   },
   {
@@ -305,14 +306,14 @@ export default function PersonaWorkflows({ id = 'workflows', className }: Props)
       <div className="space-y-8 rounded-3xl border border-border/60 bg-[color:var(--panel)]/85 px-6 py-10 shadow-card sm:px-10 sm:py-12">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
-            <Badge className="w-fit">Workflows by persona</Badge>
+            <Badge className="w-fit">Steel roles in the OS</Badge>
             <h2 id="persona-heading" className="text-3xl font-semibold leading-tight sm:text-4xl">
-              What life looks like inside the OS
+              Workflows by persona
             </h2>
             <p className="max-w-3xl text-base text-muted-foreground">
-              AI drafts forms, analysis, and visuals for review; humans approve; every decision stays auditable across
-              estimators, detailers, fabricators, erectors, PMs, owners, QA/QC, safety, HR, vendors, compliance, cost,
-              and licensed professionals-outcomes are tracked, means and methods stay yours.
+              AI assists with forms, analysis, and visual context; your teams review and approve. Every decision stays auditable
+              across estimators, detailers, fabricators, erectors, PMs, QA/QC, safety, and oversight roles-outcomes are tracked,
+              means and methods stay yours.
             </p>
           </div>
           <div className="rounded-full border border-border/60 bg-panel/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground shadow-glow">

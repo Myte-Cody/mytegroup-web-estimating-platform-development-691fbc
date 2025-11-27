@@ -143,10 +143,10 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                 account; when your wave opens, your email gets instant clearance to finish onboarding.
               </p>
               <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-                <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)]">
-                  Full name
-                  <input
-                    name="name"
+              <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)]">
+                Full name
+                <input
+                  name="name"
                     type="text"
                     autoComplete="name"
                     placeholder="Avery Structural"
@@ -154,21 +154,24 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                     aria-required="true"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                  />
-                </label>
-                <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)]">
-                  Work email
-                  <input
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@company.com"
-                    className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
-                    aria-required="true"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </label>
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)]">
+                Work email
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
+                  aria-required="true"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <span className="text-xs font-normal text-muted-foreground">
+                  Company email only (no Gmail, Outlook, Yahoo, iCloud, etc.).
+                </span>
+              </label>
                 <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)] md:col-span-2">
                   Role
                   <select

@@ -27,7 +27,7 @@ export default function SiteHeader() {
 
   return (
     <header className="global-header">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-full border border-border/60 bg-[color:var(--panel)]/90 px-4 py-3 shadow-card backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center gap-2.5 rounded-2xl border border-border/60 bg-[color:var(--panel)]/90 px-4 py-2 shadow-card backdrop-blur">
         <Link href="#hero" className="flex items-center gap-2" aria-label="MYTE Construction OS">
           <img src="/favicon.png" alt="MYTE Construction icon" className="brand-icon" />
           <div className="leading-tight">

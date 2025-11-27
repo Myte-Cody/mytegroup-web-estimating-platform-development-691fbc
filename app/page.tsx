@@ -17,8 +17,8 @@ import WaitlistSection from './components/WaitlistSection'
 import { Badge } from './components/ui/badge'
 import { buttonVariants } from './components/ui/button'
 
-const CTA_PRIMARY = 'Join the Private Waitlist'
-const CTA_SECONDARY = 'See the Source Blueprint'
+const CTA_PRIMARY = 'Book a Build Session'
+const CTA_SECONDARY = 'Join the Waitlist'
 
 export default function LandingPage() {
   const reduceMotion = useReducedMotion()
@@ -47,47 +47,48 @@ export default function LandingPage() {
         >
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <motion.div className="space-y-5" variants={fadeIn}>
-                <Badge className="w-fit">Built For What You Need</Badge>
+                <Badge className="w-fit">Steel-first, open to other trades</Badge>
                 <div className="space-y-3">
                   <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-                    Finally see your whole business. Without replacing a single role.
+                    MYTE Construction OS for Structural Steel—and Beyond
                   </h1>
                   <p className="text-lg text-muted-foreground">
-                    Myte Construction OS grew from roots in structural steel into the intelligence layer between every
-                    construction trade. It captures what your teams already do and turns it into intelligence you can act on.
+                    Built by and for steel estimators, detailers, fabricators, and erectors—open the code, keep your workflows,
+                    and invite allied trades as you grow.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link href="#cta" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
                     {CTA_PRIMARY}
                   </Link>
-                  <Link href="#sovereign" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+                  <Link href="#cta" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
                     {CTA_SECONDARY}
                   </Link>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  We onboard new organizations in waves so support stays human and hands-on. If this wave is full, you&apos;ll
-                  get an invite as soon as a seat opens.
+                  We onboard new organizations in waves so support stays human and hands-on. First 5 seats are free per org; if this
+                  wave is full, you&apos;ll get an invite as soon as a seat opens.
                 </p>
                 <div className="flex flex-wrap gap-2 text-sm text-muted-foreground hero-pills">
                   <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/5 px-3 py-1">
                     <Sparkles size={16} />
-                    End-to-end business intelligence
+                    ISO-ready bids, markups, and field reports stay linked
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/5 px-3 py-1">
                     <Shield size={16} />
-                    Human-in-the-loop across every department
+                    AI drafts forms; your team reviews and signs off
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/5 px-3 py-1">
                     <Workflow size={16} />
-                    Workflows that keep every role sovereign
+                    Fabrication &amp; erection workflows tied to estimating &amp; controls
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  No replacements. No surveillance. Myte runs alongside your existing tools as a construction OS-on Windows,
-                  Linux, and Mac, in your cloud or on-prem-so your company, not your vendors, stays in control of its data.
-                  <span className="block font-semibold mt-1">
-                    Your company. Your people. Your intelligence. Finally united.
+                  No replacements. No surveillance. Myte runs alongside your existing tools as a construction OS—on Windows,
+                  Linux, and Mac, in your cloud or on-prem—so your company, not your vendors, stays in control of its data.
+                  <span className="block mt-1">
+                    Start hosted, move to sovereign—your domain, your data, your code. Other trades are welcome; the foundation
+                    is free and open, with costs in compute and support.
                   </span>
                 </p>
               </motion.div>

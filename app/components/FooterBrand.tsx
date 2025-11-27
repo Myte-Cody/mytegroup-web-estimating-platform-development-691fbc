@@ -39,7 +39,7 @@ export default function FooterBrand() {
         <div>Contact Us</div>
         <div>Myte Group, 7501 Av. M B Jodoin, Anjou, QC H1J 2H9</div>
         <div>
-          <a href="mailto:info@mytegroup.ai">info@mytegroup.ai</a>
+          <a href="mailto:info@mytegroup.com">info@mytegroup.com</a>
         </div>
       </div>
     </div>

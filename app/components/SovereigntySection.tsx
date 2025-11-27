@@ -11,16 +11,16 @@ type Props = {
 
 const sovereigntyPoints = [
   {
-    title: 'Your domain, your data, your code.',
-    body: 'The system is designed so you can move from a hosted subdomain to your own domain without rewriting the app.',
+    title: 'Hosted today, sovereign tomorrow.',
+    body: 'Start on a Myte subdomain with managed infrastructure, then move to your own domain and infrastructure through a guided migration—no app rewrites, just data and config changes. Full code and infra ownership are available with the sovereign license.',
   },
   {
-    title: 'Policy-gated AI.',
-    body: 'You define which workflows AI can touch, and all suggestions require human approval where it matters.',
+    title: 'Policy-gated AI, on your terms.',
+    body: 'You decide which steel workflows AI can assist—estimating, detailing, fabrication, erection—and every assisted step routes to a human approver. No auto-approvals; your experts keep the keys.',
   },
   {
-    title: 'Audit trails everywhere.',
-    body: 'Estimates, drawings, RFIs, COs, field logs, and AI interactions all leave a trace.',
+    title: 'Audit trails across every project.',
+    body: 'Estimates, drawings, RFIs, COs, field logs, and AI-assisted suggestions all leave a trace so leaders can see what changed, who cleared it, and why.',
   },
 ]
 
@@ -33,7 +33,9 @@ export default function SovereigntySection({ id = 'sovereign', className }: Prop
             <Badge className="w-fit">Sovereignty & control</Badge>
             <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Own the machine without vendor lock-in</h2>
             <p className="max-w-3xl text-base text-muted-foreground">
-              Start hosted, then take full control. Move from a Myte subdomain to your own domain with configuration changes, not rewrites.
+              Start hosted on a Myte subdomain, then grow into a sovereign stack. Move to your own domain and
+              infrastructure with a guided migration—no app rewrites, but clear steps for data, infra, and keys when
+              you are ready to take full control.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-panel/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-glow">
@@ -46,15 +48,20 @@ export default function SovereigntySection({ id = 'sovereign', className }: Prop
 
         <div className="grid gap-4 md:grid-cols-3">
           {sovereigntyPoints.map((item) => (
-            <Card key={item.title} className="h-full border-border/70 bg-[color:var(--panel)] shadow-card">
+            <Card
+              key={item.title}
+              className="h-full border-border/70 bg-[color:var(--panel)] shadow-card p-4 sm:p-5"
+            >
               <CardHeader className="space-y-1">
-                <CardTitle className="text-lg leading-tight">{item.title}</CardTitle>
+                <CardTitle className="text-base font-semibold leading-snug">{item.title}</CardTitle>
                 <CardDescription className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   <Shield size={14} className="mr-1 inline-block align-middle text-accent" aria-hidden />
                   Sovereign ready
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{item.body}</CardContent>
+              <CardContent className="text-sm leading-relaxed text-muted-foreground">
+                {item.body}
+              </CardContent>
             </Card>
           ))}
         </div>
