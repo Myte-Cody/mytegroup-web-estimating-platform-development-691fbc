@@ -23,17 +23,19 @@ type PricingPlan = {
   badge?: string
   featured?: boolean
   note?: string
+  secondaryCta?: string
+  secondaryHref?: string
 }
 
 const plans: PricingPlan[] = [
   {
     name: 'Hosted Starter',
-    price: '5 free seats + $50/extra seat/mo',
-    for: 'Teams launching quickly on the hosted OS with auditability baked in.',
+    price: 'Free seats to start, then per-seat pricing',
+    for: 'Launch your steel estimating, takeoff, and field workflows in minutes—AI assists, your team approves, and every action is auditable. Hosted by MYTE; migrate to sovereignty any time.',
     bullets: [
-      'Pooled AI actions so you can run real work on day one.',
-      'Stay hosted while you map roles and guardrails; move to your own domain without a rebuild.',
-      'Human-in-the-loop controls and traceable events from day one.',
+      'All core steel workflows in one place: estimating, takeoff, field reporting, and compliance with audit trails.',
+      'Pooled AI assistance for ISO forms, connection analysis, and bid visuals—your team approves every move.',
+      'Stay hosted while you map roles and guardrails, then migrate to your own domain without a rebuild.',
     ],
     cta: 'Start hosted',
     href: '/auth/register',
@@ -43,29 +45,33 @@ const plans: PricingPlan[] = [
   },
   {
     name: 'Sovereign Source License',
-    price: '$55k one-time license',
-    for: 'Organizations that want to own the code, data, and domain.',
+    price: 'One-time sovereign source license',
+    for: 'For steel organizations ready to own the OS—run it on your infrastructure with your IT, identity, and security controls.',
     bullets: [
-      'Inspect and extend the Structural Steel OS with your engineers.',
-      'Run on your infrastructure with your preferred identity and policy controls.',
-      'Keep the human-in-the-loop guardrails and event trails intact.',
+      'Full access to the Structural Steel OS codebase and your data on your infrastructure.',
+      'Integrate with your identity, policy, and security stack while keeping AI assistive and human-approved.',
+      'Migration support from hosted to sovereign without losing workflows, history, or audit trails.',
     ],
-    cta: 'See the source blueprint',
-    href: '/auth/register?path=sovereign',
+    cta: 'Join the waitlist',
+    href: '#cta',
+    secondaryCta: 'Book a license call',
+    secondaryHref: 'https://calendly.com/ahmed-mekallach/thought-exchange',
     badge: 'Own the machine',
     note: 'Shift from hosted to fully sovereign without vendor lock-in.',
   },
   {
     name: 'Sovereign Managed Customization',
-    price: 'From $8.5k per month',
-    for: 'Teams that want a dedicated build lane on their fork.',
+    price: 'Managed sovereign retainer',
+    for: 'For teams that want ongoing custom development and support on their sovereign instance.',
     bullets: [
-      'Ongoing custom development and support on your sovereign instance.',
-      'Workflows tuned for estimators, detailers, fabricators, erectors, and field teams.',
-      'Compliance, audit logging, and AI checkpoints tailored to your policies.',
+      'Dedicated build lane on your fork for steel estimating, detailing, fabrication, erection, and compliance.',
+      'Custom features, integrations, and workflow tuning delivered by a managed MYTE crew.',
+      'Compliance, audit logging, and AI checkpoints tailored to your policies and jurisdictions.',
     ],
     cta: 'Book a build session',
-    href: '/auth/register?path=managed',
+    href: 'https://calendly.com/ahmed-mekallach/thought-exchange',
+    secondaryCta: 'Explore Myte Cody',
+    secondaryHref: 'https://mytecody.com',
     note: 'Perfect when you want sovereignty plus a managed crew evolving the OS with you.',
   },
 ]
@@ -76,61 +82,79 @@ export default function PricingSection({ id = 'pricing', className, ctaHref = '#
       <div className="space-y-6 rounded-3xl border border-border/60 bg-[color:var(--panel)]/85 px-6 py-10 shadow-card sm:px-10 sm:py-12">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
-            <Badge className="w-fit">Pricing & offers</Badge>
-            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Pick your path to sovereignty</h2>
+            <Badge className="w-fit">Pricing & paths</Badge>
+            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">
+              Pricing & paths to steel sovereignty
+            </h2>
             <p className="max-w-3xl text-base text-muted-foreground">
-              Hosted starts get you moving fast with guardrails intact. Sovereign paths let you own the machine-code, data,
-              and domain-with us beside you for customization.
+              Start hosted with free seats to prove out workflows, then move to full ownership—your domain, your data,
+              your code. Seat and license pricing stay simple; AI-heavy workflows add usage-based compute on top.
             </p>
           </div>
           <div className="rounded-full border border-border/60 bg-panel/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-glow">
-            No lock-in. Human-in-the-loop by design.
+            No lock-in. Compute usage stays transparent.
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={cn(
-              'flex h-full flex-col border-border/70 bg-[color:var(--panel)] shadow-card',
-              plan.featured && 'border-accent/60 shadow-glow'
-            )}
-          >
-            <CardHeader className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <span className="rounded-full border border-border/60 bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                  {plan.price}
-                </span>
-              </div>
-              <CardDescription className="text-sm font-semibold uppercase tracking-[0.16em]">
-                {plan.badge ?? 'Sovereign-ready'}
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-muted-foreground">{plan.for}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-3 text-sm text-muted-foreground">
-              <ul className="space-y-2">
-                {plan.bullets.map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent" aria-hidden />
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-3">
-              <Link
-                href={plan.href || ctaHref}
-                className={cn(buttonVariants({ variant: plan.featured ? 'primary' : 'secondary', size: 'md' }), 'w-full justify-center')}
-              >
-                {plan.cta ?? ctaLabel ?? 'Talk to sales'}
-              </Link>
-              {plan.note && <p className="text-sm text-muted-foreground">{plan.note}</p>}
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+          {plans.map((plan) => (
+            <Card
+              key={plan.name}
+              className={cn(
+                'flex h-full flex-col border-border/70 bg-[color:var(--panel)] shadow-card p-4 sm:p-5',
+                plan.featured && 'border-accent/60 shadow-glow'
+              )}
+            >
+              <CardHeader className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-lg font-semibold leading-snug">{plan.name}</CardTitle>
+                  <span className="rounded-full border border-border/60 bg-white/5 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+                    {plan.price}
+                  </span>
+                </div>
+                <CardDescription className="text-xs font-semibold uppercase tracking-[0.16em]">
+                  {plan.badge ?? 'Sovereign-ready'}
+                </CardDescription>
+                <CardDescription className="text-sm leading-relaxed text-muted-foreground">
+                  {plan.for}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 space-y-3 text-sm text-muted-foreground">
+                <ul className="space-y-2">
+                  {plan.bullets.map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent" aria-hidden />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-3">
+                <Link
+                  href={plan.href || ctaHref}
+                  className={cn(
+                    buttonVariants({ variant: plan.featured ? 'primary' : 'secondary', size: 'md' }),
+                    'w-full justify-center'
+                  )}
+                >
+                  {plan.cta ?? ctaLabel ?? 'Talk to sales'}
+                </Link>
+                {plan.secondaryCta && plan.secondaryHref && (
+                  <Link
+                    href={plan.secondaryHref}
+                    className={cn(
+                      buttonVariants({ variant: plan.featured ? 'secondary' : 'outline', size: 'md' }),
+                      'w-full justify-center'
+                    )}
+                  >
+                    {plan.secondaryCta}
+                  </Link>
+                )}
+                {plan.note && <p className="text-sm text-muted-foreground">{plan.note}</p>}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
   )

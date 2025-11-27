@@ -15,24 +15,27 @@ type Step = {
 const steps: Step[] = [
   {
     title: 'Blueprint',
-    caption: 'Map roles, workflows, and guardrails.',
+    caption: 'Map roles, steel workflows, and guardrails.',
     description:
-      'We map your roles, workflows, and guardrails. You decide where AI can help and where humans must always approve.',
-    outcome: 'Output: approvals, checkpoints, and ownership spelled out before we build.',
+      'Map your roles, steel workflows, and approval guardrails. Decide where AI can assist—like drafting ISO forms or connection analysis packets—and where your team must always sign off.',
+    outcome:
+      'Output: Approvals, checkpoints, and ownership boundaries are defined up front—before any build begins.',
   },
   {
     title: 'Build & Wire Intelligence',
-    caption: 'Stand up the OS and connect your data.',
+    caption: 'Stand up the OS and connect your steel data.',
     description:
-      'We stand up the OS, connect your data, and configure human-in-the-loop checkpoints across estimating, detailing, fabrication, erection, and compliance.',
-    outcome: 'Output: live workflows with policy-gated AI that always routes back to your experts.',
+      'We stand up your OS, connect your estimating, detailing, fabrication, and erection data, and configure human-in-the-loop checkpoints. AI can pre-fill forms and generate 3D visuals, but your experts always review and approve.',
+    outcome:
+      'Output: Live steel workflows with audit trails and policy-gated AI—every action is traceable and routed back to your team.',
   },
   {
     title: 'Handoff & Grow',
-    caption: 'You own the repo, infra, and keys.',
+    caption: 'Own the code, infra, and keys (sovereign path).',
     description:
-      'You own the repo, infra, and keys. Extend the system with your team or have us manage a fork while you keep sovereignty.',
-    outcome: 'Output: a sovereign OS you can tune, extend, and audit without vendor lock-in.',
+      'On the sovereign path, you own the code, infrastructure, and keys—no vendor lock-in. Extend the system with your engineers, or have us manage a fork while you keep full control. Hosted customers can upgrade to sovereignty at any time.',
+    outcome:
+      'Output: A structural steel OS you can audit, tune, and extend—your domain, your data, your code.',
   },
 ]
 
@@ -77,11 +80,11 @@ export default function HowItWorksSection({ id = 'how', className }: Props) {
           Blueprint &gt; Build &amp; Wire &gt; Handoff
         </div>
         <h2 id="how-it-works" className="text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-          Own the structural steel OS in three moves
+          How it works: adopt the structural steel OS in three steps
         </h2>
         <p className="mx-auto max-w-3xl text-base text-muted-foreground">
-          A clear, human-in-the-loop rollout that keeps you in charge from blueprint to handoff-and leaves you with a
-          machine you can open, tune, and extend.
+          A clear, human-in-the-loop rollout—purpose-built for steel fabricators, erectors, and their leadership. Move
+          from blueprint to ownership without losing control or knowledge.
         </p>
       </motion.div>
 
@@ -92,7 +95,7 @@ export default function HowItWorksSection({ id = 'how', className }: Props) {
         />
         {steps.map((step, index) => (
           <motion.div key={step.title} variants={fadeUp} className="relative">
-            <Card className="group h-full border-white/10 bg-card/80 text-left shadow-card transition duration-200 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_24px_80px_rgba(37,99,235,0.28)]">
+            <Card className="group h-full border-white/10 bg-card/80 p-4 text-left shadow-card transition duration-200 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_24px_80px_rgba(37,99,235,0.28)] sm:p-5">
               <CardHeader className="flex flex-row items-start gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 via-primary/10 to-transparent text-base font-semibold text-primary ring-1 ring-inset ring-primary/40">
                   {String(index + 1).padStart(2, '0')}

@@ -13,11 +13,11 @@ type Props = {
 }
 
 const bulletPoints = [
-  'Knowledge stays inside your structural steel workflows, even when teams rotate.',
-  'AI pre-fills ISO forms, connection analysis packets, and bid visuals; your people decide what proceeds.',
-  'Every suggestion and approval is logged for audit-ready transparency.',
+  'Knowledge stays inside your structural steel workflows, even as teams rotate.',
+  'AI assists with ISO forms and analysis; your people decide what proceeds.',
+  'Every approval and key suggestion is logged for audit-ready transparency.',
   'Outcomes are tracked; means and methods stay with your licensed professionals.',
-  'Sovereign by design: each organization controls its data while opting into shared workflows.',
+  'Sovereign by design: each organization controls its data and can opt into shared workflows.',
 ]
 
 const loopStages = [
@@ -29,14 +29,16 @@ const loopStages = [
   },
   {
     label: 'Assist',
-    title: 'AI drafts, you approve',
-    body: 'The OS fills ISO review forms, connection analysis packages, and 3D bid visuals from your 2D take-off so your detailers and PMs can review, edit, or decline them.',
+    title: 'AI assists, you decide',
+    body:
+      'The OS pre-fills ISO review forms, assembles connection analysis packets, and generates 3D bid previews from your 2D take-off so your detailers and PMs can review, edit, or decline them.',
     icon: Brain,
   },
   {
     label: 'Approve',
     title: 'Your experts keep the keys',
-    body: 'Humans sign off on what ships - every approval is logged so you always know who cleared a change and why.',
+    body:
+      'Humans sign off on what ships—no auto-approvals. Every approval is logged so you always know who cleared a change and why.',
     icon: ShieldCheck,
   },
   {
@@ -84,8 +86,9 @@ export default function IntelligenceSection({ id = 'intelligence', className }: 
           Intelligence that empowers, never replaces
         </h2>
         <p className="max-w-4xl text-base text-muted-foreground">
-          AI drafts ISO-ready forms, connection analysis packages, and bid visuals; your experts approve. Every
-          suggestion and decision is recorded so knowledge never walks out the door.
+          AI assists by pre-filling ISO forms, assembling connection analysis packets, and generating 3D bid previews
+          from your 2D take-off. Your experts always review and approve. Every approval and key suggestion is logged so
+          knowledge stays with your company—even as teams change.
         </p>
       </motion.div>
 
@@ -94,17 +97,18 @@ export default function IntelligenceSection({ id = 'intelligence', className }: 
           <div className="space-y-3 rounded-2xl border border-border/60 bg-[color:var(--panel-strong)] p-5 shadow-card">
             <p className="text-[var(--text)]">
               Your crews do the real work; the OS keeps their context alive. Estimates, RFIs, drawing markups, and field
-              approvals stay searchable so no one relearns a job when roles shift.
+              approvals are captured and traceable, so no one relearns a job from scratch.
             </p>
             <p className="text-muted-foreground">
-              AI stays in an assistive lane. It fills ISO review forms, assembles connection analysis at bid stage, and
-              generates 3D bid visuals from your 2D take-off, but humans approve the moves. Each decision carries a
-              receipt so leaders can see how work advanced and who cleared it.
+              AI stays in an assistive lane: it never auto-approves or bypasses your team. It pre-fills ISO review
+              forms, assembles connection analysis at bid stage, and generates 3D bid previews from your 2D take-off,
+              but humans approve every move. Each approval and change carries a receipt so leaders can see how work
+              advanced and who cleared it.
             </p>
             <p className="text-muted-foreground">
-              Collaboration never costs you control. Shops, detailers, fabricators, erectors, PMs, owners, and licensed
-              professionals coordinate with clear data boundaries and audit trails that travel with every project. The OS
-              tracks outcomes; means and methods stay with the professionals who own them.
+              Collaboration is designed to preserve your data boundaries and audit trails as projects move between
+              shops, detailers, fabricators, erectors, PMs, owners, and licensed professionals. The OS tracks outcomes;
+              means and methods stay with the professionals who own them.
             </p>
           </div>
           <ul className="grid gap-3 md:grid-cols-2">
@@ -145,7 +149,10 @@ export default function IntelligenceSection({ id = 'intelligence', className }: 
             {loopStages.map((stage, index) => {
               const Icon = stage.icon
               return (
-                <Card key={stage.label} className="border-border/70 bg-[color:var(--panel)] shadow-inner">
+                <Card
+                  key={stage.label}
+                  className="border-border/70 bg-[color:var(--panel)] shadow-inner p-4 sm:p-5"
+                >
                   <CardHeader className="flex flex-row items-start gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent/25 via-accent/10 to-transparent text-accent ring-1 ring-inset ring-accent/40">
                       <Icon size={18} strokeWidth={1.75} />
@@ -157,7 +164,9 @@ export default function IntelligenceSection({ id = 'intelligence', className }: 
                       </CardDescription>
                     </div>
                   </CardHeader>
-                  <CardContent className="text-sm text-muted-foreground">{stage.body}</CardContent>
+                  <CardContent className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    {stage.body}
+                  </CardContent>
                 </Card>
               )
             })}
