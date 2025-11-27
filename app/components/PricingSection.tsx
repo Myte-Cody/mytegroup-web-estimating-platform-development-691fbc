@@ -143,7 +143,7 @@ export default function PricingSection({ id = 'pricing', className, ctaHref = '#
                   <Link
                     href={plan.secondaryHref}
                     className={cn(
-                      buttonVariants({ variant: plan.featured ? 'secondary' : 'outline', size: 'md' }),
+                      buttonVariants({ variant: plan.featured ? 'secondary' : 'ghost', size: 'md' }),
                       'w-full justify-center'
                     )}
                   >
