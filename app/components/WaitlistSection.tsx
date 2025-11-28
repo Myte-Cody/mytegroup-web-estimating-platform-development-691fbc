@@ -31,6 +31,7 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [waitlistDisplay, setWaitlistDisplay] = useState(FALLBACK_WAITLIST_COUNT)
   const [freeSeatsPerOrg, setFreeSeatsPerOrg] = useState(FALLBACK_FREE_SEATS_PER_ORG)
+  const [spotsLeftThisWave, setSpotsLeftThisWave] = useState<string | null>(null)
 
   const payload = useMemo(
     () => ({
@@ -50,13 +51,19 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
     let mounted = true
     async function loadStats() {
       try {
-        const stats = await apiFetch<{ waitlistCount?: number; waitlistDisplayCount?: number; freeSeatsPerOrg?: number }>(
-          WAITLIST_STATS_ENDPOINT
-        )
+        const stats = await apiFetch<{
+          waitlistCount?: number
+          waitlistDisplayCount?: number
+          freeSeatsPerOrg?: number
+          spotsLeftThisWave?: number
+        }>(WAITLIST_STATS_ENDPOINT)
         if (!mounted) return
         if (typeof stats?.waitlistDisplayCount === 'number') setWaitlistDisplay(stats.waitlistDisplayCount.toLocaleString())
         else if (typeof stats?.waitlistCount === 'number') setWaitlistDisplay(stats.waitlistCount.toLocaleString())
         if (typeof stats?.freeSeatsPerOrg === 'number') setFreeSeatsPerOrg(String(stats.freeSeatsPerOrg))
+        if (typeof stats?.spotsLeftThisWave === 'number') {
+          setSpotsLeftThisWave(String(Math.max(0, stats.spotsLeftThisWave)))
+        }
       } catch {
         // keep fallback numbers if fetch fails
       }
@@ -113,11 +120,18 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
               First 5 seats are free per org—full platform, AI actions included. Join the queue now; we invite cohorts in waves and unlock your account when your wave opens.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-panel/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground shadow-glow">
-            <span className="rounded-full bg-white/10 p-1.5 text-accent ring-1 ring-inset ring-accent/30">
-              <Users size={14} />
-            </span>
-            {waitlistDisplay}+ on the waitlist
+          <div className="flex flex-col items-start gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-panel/60 px-4 py-2 shadow-glow">
+              <span className="rounded-full bg-white/10 p-1.5 text-accent ring-1 ring-inset ring-accent/30">
+                <Users size={14} />
+              </span>
+              {waitlistDisplay}+ on the waitlist
+            </div>
+            {spotsLeftThisWave && (
+              <div className="rounded-full border border-border/60 bg-panel/60 px-4 py-1 text-[0.65rem] font-semibold tracking-[0.18em] text-accent shadow-glow">
+                {spotsLeftThisWave} spots left this wave
+              </div>
+            )}
           </div>
         </div>
 

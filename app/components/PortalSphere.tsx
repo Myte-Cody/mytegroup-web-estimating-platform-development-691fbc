@@ -96,11 +96,14 @@ function PortalSphereInner({ pointCount = 320, theme, reduceMotion = false, radi
     return buildDynamicPool(vecs, Math.min(180, Math.floor(pointCount * 0.6)))
   }, [pointCount, positions])
 
-  const basePointColor = theme === 'light' ? new THREE.Color('#0b63e6') : new THREE.Color('#c8dcff')
-  const hotPointColor = theme === 'light' ? new THREE.Color('#30c7ff') : new THREE.Color('#f5fbff')
-  const haloColor = theme === 'light' ? new THREE.Color('#d7ecff') : new THREE.Color('#e6f3ff')
-  const lineColor = theme === 'light' ? '#0b4ba8' : '#5f79ad'
-  const dynamicLineColor = theme === 'light' ? '#0f9bff' : '#8bbdff'
+  const basePointColor =
+    theme === 'light' ? new THREE.Color('#2563eb') : new THREE.Color('#9ec5ff')
+  const hotPointColor =
+    theme === 'light' ? new THREE.Color('#60a5fa') : new THREE.Color('#e5f2ff')
+  const haloColor =
+    theme === 'light' ? new THREE.Color('#dbeafe') : new THREE.Color('#e0f2ff')
+  const lineColor = theme === 'light' ? '#1d4ed8' : '#64748b'
+  const dynamicLineColor = theme === 'light' ? '#3b82f6' : '#93c5fd'
 
   useFrame((state) => {
     const { clock, viewport } = state
@@ -150,25 +153,13 @@ function PortalSphereInner({ pointCount = 320, theme, reduceMotion = false, radi
     >
       <Points positions={positions} stride={3} ref={pointsRef} frustumCulled>
         <PointMaterial
-          transparent
-          color={haloColor}
-          size={0.34}
-          sizeAttenuation
-          depthWrite={false}
-          opacity={0.32}
-          blending={THREE.AdditiveBlending}
-          toneMapped={false}
-        />
-      </Points>
-      <Points positions={positions} stride={3} ref={pointsRef} frustumCulled>
-        <PointMaterial
           ref={matRef}
           transparent
           color={basePointColor}
-          size={0.2}
+          size={0.06}
           sizeAttenuation
           depthWrite={false}
-          opacity={0.98}
+          opacity={0.4}
           toneMapped={false}
         />
       </Points>

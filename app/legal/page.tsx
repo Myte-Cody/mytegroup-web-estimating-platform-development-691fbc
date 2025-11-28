@@ -30,6 +30,7 @@ export default function LegalAcceptancePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [accepting, setAccepting] = useState<string | null>(null)
+  const [readonly, setReadonly] = useState(false)
 
   const loadStatus = async () => {
     setLoading(true)
@@ -44,12 +45,16 @@ export default function LegalAcceptancePage() {
       }
       await loadDocs(pending)
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        router.replace('/auth/login')
-        return
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        // Anonymous viewer: show all known docs in read-only mode
+        const allTypes = Object.keys(placeholderText)
+        setReadonly(true)
+        setRequired(allTypes)
+        await loadDocs(allTypes)
+      } else {
+        const message = err instanceof ApiError ? err.message : 'Unable to fetch legal requirements right now.'
+        setError(message)
       }
-      const message = err instanceof ApiError ? err.message : 'Unable to fetch legal requirements right now.'
-      setError(message)
     } finally {
       setLoading(false)
     }
@@ -99,13 +104,19 @@ export default function LegalAcceptancePage() {
   return (
     <AuthShell
       title="Review & accept legal documents"
-      subtitle="Please review the latest Privacy Policy and Terms before continuing. Your acceptance is recorded with your session."
-      badge="Compliance hold"
+      subtitle={
+        readonly
+          ? 'Review the latest Privacy Policy and Terms for MYTE Construction OS.'
+          : 'Please review the latest Privacy Policy and Terms before continuing. Your acceptance is recorded with your session.'
+      }
+      badge={readonly ? 'Public legal' : 'Compliance hold'}
     >
       <div className="legal-stack">
         {loading && <div className="feedback subtle">Loading requirements...</div>}
         {error && <div className="feedback error">{error}</div>}
-        {!loading && !required.length && <div className="feedback success">You are all set. Redirecting...</div>}
+        {!loading && !readonly && !required.length && (
+          <div className="feedback success">You are all set. Redirecting...</div>
+        )}
         {pendingDocs.map((doc) => (
           <article key={doc.type} className="legal-card">
             <div className="legal-header">
@@ -113,14 +124,20 @@ export default function LegalAcceptancePage() {
                 <div className="legal-label">{labelForLegalType[doc.type] || doc.type}</div>
                 <div className="muted">Version: {doc.version || 'Latest'}</div>
               </div>
-              <button
-                className="btn primary"
-                type="button"
-                onClick={() => handleAccept(doc.type)}
-                disabled={accepting === doc.type}
-              >
-                {accepting === doc.type ? 'Recording...' : 'Accept'}
-              </button>
+              {!readonly ? (
+                <button
+                  className="btn primary"
+                  type="button"
+                  onClick={() => handleAccept(doc.type)}
+                  disabled={accepting === doc.type}
+                >
+                  {accepting === doc.type ? 'Recording...' : 'Accept'}
+                </button>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Sign in to record acceptance against your account.
+                </span>
+              )}
             </div>
             <div className="legal-body">
               <p>{doc.content}</p>
@@ -128,7 +145,7 @@ export default function LegalAcceptancePage() {
           </article>
         ))}
         <div className="form-links">
-          <Link href="/auth/login">Back to sign in</Link>
+          <Link href="/auth/login">Sign in</Link>
           <Link href="/auth/register">Create account</Link>
         </div>
       </div>

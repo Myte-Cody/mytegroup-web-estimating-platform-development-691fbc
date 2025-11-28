@@ -26,9 +26,9 @@ function ResetForm() {
     setSuccess(false)
     setLoading(true)
     try {
-      await apiFetch('/auth/reset', {
+      await apiFetch('/auth/reset-password', {
         method: 'POST',
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, newPassword: password }),
       })
       setSuccess(true)
       setTimeout(() => router.push('/auth/login'), 1200)

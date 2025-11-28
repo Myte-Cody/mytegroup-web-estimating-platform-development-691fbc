@@ -17,8 +17,8 @@ import WaitlistSection from '../components/WaitlistSection'
 import { Badge } from '../components/ui/badge'
 import { buttonVariants } from '../components/ui/button'
 
-const CTA_PRIMARY = 'Book a Build Session'
-const CTA_SECONDARY = 'Join the Waitlist'
+const CTA_PRIMARY = 'Create account'
+const CTA_SECONDARY = 'Sign in'
 
 export default function LandingPage() {
   const reduceMotion = useReducedMotion()
@@ -58,10 +58,10 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="#cta" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+                <Link href="/auth/register" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
                   {CTA_PRIMARY}
                 </Link>
-                <Link href="#cta" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+                <Link href="/auth/login" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
                   {CTA_SECONDARY}
                 </Link>
               </div>
@@ -85,7 +85,11 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            <motion.div variants={fadeIn} className="relative">
+            <motion.div variants={fadeIn} className="hero-visual">
+              <div className="portal-static">
+                <div className="portal-static-gradient" />
+                <SkyscraperSVG className="portal-static-poster hero-skyscraper" />
+              </div>
               <PortalSphere />
             </motion.div>
           </div>
@@ -99,7 +103,6 @@ export default function LandingPage() {
         <PricingSection />
         <WaitlistSection />
         <FaqSection />
-        <SkyscraperSVG />
       </div>
     </main>
   )

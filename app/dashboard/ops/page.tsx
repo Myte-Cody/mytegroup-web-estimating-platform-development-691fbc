@@ -11,14 +11,25 @@ type HealthResponse = {
   flags?: Record<string, boolean>
 }
 
+const PLATFORM_ROLES = ['superadmin', 'platform_admin']
+
 export default function OpsDashboard() {
   const [data, setData] = useState<HealthResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [role, setRole] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
       try {
+        const me = await apiFetch<{ user?: { role?: string } }>('/auth/me')
+        const currentRole = me?.user?.role || null
+        setRole(currentRole)
+        if (!currentRole || !PLATFORM_ROLES.includes(currentRole)) {
+          setError('Platform admin access required.')
+          setLoading(false)
+          return
+        }
         const res = await apiFetch<HealthResponse>('/health/full')
         setData(res)
         setError(null)

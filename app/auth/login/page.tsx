@@ -18,11 +18,11 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      const res = await apiFetch<{ legalRequired?: string[] }>('/auth/login', {
+      const res = await apiFetch<{ legalRequired?: boolean }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       })
-      if (res?.legalRequired?.length) {
+      if (res?.legalRequired) {
         router.push('/legal')
       } else {
         router.push('/dashboard')
