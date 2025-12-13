@@ -13,11 +13,11 @@ type Props = {
 }
 
 const bulletPoints = [
-  'Knowledge stays inside your structural steel workflows, even as teams rotate.',
-  'AI assists with ISO forms and analysis; your people decide what proceeds.',
-  'Every approval and key suggestion is logged for audit-ready transparency.',
-  'Outcomes are tracked; means and methods stay with your licensed professionals.',
-  'Sovereign by design: each organization controls its data and can opt into shared workflows.',
+  'Knowledge stays with your company, even as teams rotate.',
+  'AI assists with drafts and structure; your people decide what proceeds.',
+  'Approvals and key actions are logged, so the trail stays intact.',
+  'Outcomes are tracked; decisions remain human and accountable.',
+  'Sovereign by design: your organization controls its data and sharing rules.',
 ]
 
 const loopStages = [
@@ -31,7 +31,7 @@ const loopStages = [
     label: 'Assist',
     title: 'AI assists, you decide',
     body:
-      'The OS pre-fills ISO review forms, assembles connection analysis packets, and generates 3D bid previews from your 2D take-off so your detailers and PMs can review, edit, or decline them.',
+      'The OS drafts, summarizes, and pre-fills where it helps. Your experts can review, edit, or decline anything.',
     icon: Brain,
   },
   {
@@ -83,12 +83,11 @@ export default function IntelligenceSection({ id = 'intelligence', className }: 
       <motion.div className="space-y-3" variants={fade}>
         <Badge className="w-fit">Human-in-the-loop intelligence</Badge>
         <h2 className="text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-          Intelligence that empowers, never replaces
+          Helpful intelligence. Zero autopilot.
         </h2>
         <p className="max-w-4xl text-base text-muted-foreground">
-          AI assists by pre-filling ISO forms, assembling connection analysis packets, and generating 3D bid previews
-          from your 2D take-off. Your experts always review and approve. Every approval and key suggestion is logged so
-          knowledge stays with your company—even as teams change.
+          AI stays in an assistive lane: drafts, summaries, checklists, and prep. Humans keep the keys. Every approval
+          and key action is logged so your company retains the “why”-even as people change.
         </p>
       </motion.div>
 
@@ -96,19 +95,17 @@ export default function IntelligenceSection({ id = 'intelligence', className }: 
         <motion.div className="space-y-4" variants={fade}>
           <div className="space-y-3 rounded-2xl border border-border/60 bg-[color:var(--panel-strong)] p-5 shadow-card">
             <p className="text-[var(--text)]">
-              Your crews do the real work; the OS keeps their context alive. Estimates, RFIs, drawing markups, and field
-              approvals are captured and traceable, so no one relearns a job from scratch.
+              Your crews do the real work; the OS keeps the context alive. Estimates, markups, and field decisions stay
+              connected and traceable, so nobody has to relearn a job from scratch.
             </p>
             <p className="text-muted-foreground">
-              AI stays in an assistive lane: it never auto-approves or bypasses your team. It pre-fills ISO review
-              forms, assembles connection analysis at bid stage, and generates 3D bid previews from your 2D take-off,
-              but humans approve every move. Each approval and change carries a receipt so leaders can see how work
-              advanced and who cleared it.
+              AI never auto-approves or bypasses your team. It helps with drafts and structure, but humans approve every
+              move that matters. Each approval carries a receipt so leaders can see what changed, who cleared it, and
+              why.
             </p>
             <p className="text-muted-foreground">
-              Collaboration is designed to preserve your data boundaries and audit trails as projects move between
-              shops, detailers, fabricators, erectors, PMs, owners, and licensed professionals. The OS tracks outcomes;
-              means and methods stay with the professionals who own them.
+              Collaboration is designed to preserve your data boundaries and audit trails as work moves between roles,
+              companies, and project phases. The OS tracks outcomes; accountability stays human.
             </p>
           </div>
           <ul className="grid gap-3 md:grid-cols-2">

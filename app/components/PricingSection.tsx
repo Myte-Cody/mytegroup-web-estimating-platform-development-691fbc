@@ -31,26 +31,26 @@ const plans: PricingPlan[] = [
   {
     name: 'Hosted Starter',
     price: 'Free seats to start, then per-seat pricing',
-    for: 'Launch your steel estimating, takeoff, and field workflows in minutes—AI assists, your team approves, and every action is auditable. Hosted by MYTE; migrate to sovereignty any time.',
+    for: 'Launch the core workflow fast. AI helps with drafts and structure, humans approve the real decisions, and the trail is always visible. Hosted by MYTE; migrate to sovereignty any time.',
     bullets: [
-      'All core steel workflows in one place: estimating, takeoff, field reporting, and compliance with audit trails.',
-      'Pooled AI assistance for ISO forms, connection analysis, and bid visuals—your team approves every move.',
-      'Stay hosted while you map roles and guardrails, then migrate to your own domain without a rebuild.',
+      'One living record from bid to build: context stays connected.',
+      'AI assistance that stays assistive-your team approves every move that matters.',
+      'Stay hosted while you map guardrails, then migrate to your own domain without a rebuild.',
     ],
     cta: 'Start hosted',
     href: '/auth/register',
     badge: 'Start here',
     featured: true,
-    note: 'Great for fast starts while you evaluate the structural steel OS.',
+    note: 'Great for fast starts while we’re in beta waves.',
   },
   {
     name: 'Sovereign Source License',
     price: 'One-time sovereign source license',
-    for: 'For steel organizations ready to own the OS—run it on your infrastructure with your IT, identity, and security controls.',
+    for: 'For teams ready to own the OS-run it on your infrastructure with your identity and security controls.',
     bullets: [
-      'Full access to the Structural Steel OS codebase and your data on your infrastructure.',
-      'Integrate with your identity, policy, and security stack while keeping AI assistive and human-approved.',
-      'Migration support from hosted to sovereign without losing workflows, history, or audit trails.',
+      'Full source access and your data on your infrastructure.',
+      'Policy gates so AI stays helpful and humans stay accountable.',
+      'Guided migration from hosted to sovereign without losing history.',
     ],
     cta: 'Join the waitlist',
     href: '#cta',
@@ -84,11 +84,11 @@ export default function PricingSection({ id = 'pricing', className, ctaHref = '#
           <div className="space-y-3">
             <Badge className="w-fit">Pricing & paths</Badge>
             <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">
-              Pricing & paths to steel sovereignty
+              Pricing & paths
             </h2>
             <p className="max-w-3xl text-base text-muted-foreground">
-              Start hosted with free seats to prove out workflows, then move to full ownership—your domain, your data,
-              your code. Seat and license pricing stay simple; AI-heavy workflows add usage-based compute on top.
+              Start hosted with free seats to prove out the workflow, then move to full ownership when you want it.
+              Pricing stays simple; compute stays transparent.
             </p>
           </div>
           <div className="rounded-full border border-border/60 bg-panel/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground shadow-glow">

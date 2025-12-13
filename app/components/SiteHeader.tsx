@@ -33,7 +33,7 @@ export default function SiteHeader() {
           <div className="leading-tight">
             <div className="logo-text-lux text-xs">MYTE Construction OS</div>
             <div className="text-[11px] text-muted-foreground">
-              Sovereign trades OS. We don&apos;t need your data.
+              Built in the open. Grows with your crew.
             </div>
           </div>
         </Link>

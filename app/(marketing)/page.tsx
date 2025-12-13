@@ -17,7 +17,7 @@ import WaitlistSection from '../components/WaitlistSection'
 import { Badge } from '../components/ui/badge'
 import { buttonVariants } from '../components/ui/button'
 
-const CTA_PRIMARY = 'Create account'
+const CTA_PRIMARY = 'Join the beta'
 const CTA_SECONDARY = 'Sign in'
 
 export default function LandingPage() {
@@ -45,16 +45,26 @@ export default function LandingPage() {
           animate="visible"
           variants={stagger}
         >
+          <div
+            className="pointer-events-none absolute inset-0 -z-10 opacity-25"
+            style={{
+              backgroundImage: "url('/landing/hero-nature.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+            aria-hidden
+          />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[#0b1224]/20 via-transparent to-[#0b1224]/80" aria-hidden />
           <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div className="space-y-5" variants={fadeIn}>
-              <Badge className="w-fit">Steel-first, open to other trades</Badge>
+              <Badge className="w-fit">Steel-first. Built to branch out.</Badge>
               <div className="space-y-3">
                 <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-                  MYTE Construction OS for Structural Steel-and Beyond
+                  A Construction OS that grows with you
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Built by and for steel estimators, detailers, fabricators, and erectors-open the code, keep your
-                  workflows, and invite allied trades as you grow.
+                  MYTE keeps bids, drawings, field notes, and approvals connected-so your crew stops rebuilding context
+                  from scratch. Built in the open, with humans in charge.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -66,21 +76,21 @@ export default function LandingPage() {
                 </Link>
               </div>
               <p className="text-xs text-muted-foreground">
-                We onboard new organizations in waves so support stays human and hands-on. First 5 seats are free per
-                org; if this wave is full, you&apos;ll get an invite as soon as a seat opens.
+                We onboard in small waves so support stays human. First 5 seats are free per org; if this wave is full,
+                you&apos;ll get an invite as soon as a seat opens.
               </p>
               <div className="flex flex-wrap gap-2 text-sm text-muted-foreground hero-pills">
                 <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/5 px-3 py-1">
                   <Sparkles size={16} />
-                  ISO-ready bids, markups, and field reports stay linked
+                  One trail: bid → build → closeout
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/5 px-3 py-1">
                   <Shield size={16} />
-                  AI drafts forms; your team reviews and signs off
+                  AI drafts; humans approve
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/5 px-3 py-1">
                   <Workflow size={16} />
-                  Sovereign workflows you can inspect &amp; extend
+                  Hosted if you want. Sovereign when you&apos;re ready.
                 </span>
               </div>
             </motion.div>
@@ -107,4 +117,3 @@ export default function LandingPage() {
     </main>
   )
 }
-

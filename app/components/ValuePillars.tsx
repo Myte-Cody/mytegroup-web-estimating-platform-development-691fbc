@@ -10,27 +10,27 @@ type Props = {
 
 const pillars = [
   {
-    title: 'Systemized Experience',
-    tagline: 'Knowledge that stays with your company',
-    body: 'Every estimate, markup, approval, and field note is captured as reusable context. When team members roll off or leave, your reasoning and versions stay searchable—no more relearning jobs from scratch.',
+    title: 'Company Memory',
+    tagline: "Context that doesn't walk away",
+    body: 'Every estimate, markup, and field decision leaves a trail. When people roll off a job, the reasoning stays-searchable, reviewable, and tied to what shipped.',
     icon: ClipboardCheck,
   },
   {
-    title: 'Human-In-The-Loop Intelligence',
-    tagline: 'AI assists, your experts approve',
-    body: 'The OS pre-fills ISO review forms and organizes connection analysis packets, with 3D previews linked to your 2D take-off. Your detailers and PMs review, edit, and approve—every action is logged for audit.',
+    title: 'Human-First AI',
+    tagline: 'Drafts fast. Signs off slowly.',
+    body: 'AI helps with drafts, summaries, and busywork. Humans approve the real decisions. Every approval is logged so you can trust the path, not just the output.',
     icon: UserCog,
   },
   {
-    title: 'Sovereign Stack',
-    tagline: 'Your domain, your data, your code.',
-    body: 'Start hosted, then move to your own domain and infrastructure without a rebuild. Inspect and extend the codebase, keep your data in-house, and shape the OS to fit your steel workflows.',
+    title: 'Sovereign Roots',
+    tagline: 'Your domain. Your data. Your choice.',
+    body: 'Start hosted for speed, then migrate to your own domain and infrastructure when you want. We build openly so you can inspect how it works-and take the keys when you’re ready.',
     icon: ShieldCheck,
   },
   {
-    title: 'Cross-Role Continuity',
-    tagline: 'Every role aligned, no silos',
-    body: 'Estimators, PMs, detailers, fabricators, erectors, and field crews handle more bids and jobsites with less admin. Transparent versioning and audit trails keep sales, service, and operations in sync.',
+    title: 'Flow Across Roles',
+    tagline: 'Less swivel-chair, more momentum',
+    body: 'Estimators, PMs, detailers, shop, and field crews work off the same living record. No copy/paste spirals-just clear handoffs, versioning, and receipts.',
     icon: Users,
   },
 ] as const
@@ -44,16 +44,16 @@ export default function ValuePillars({ id = 'value', className }: Props) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-              Sovereign Steel OS
+              A living OS for builders
             </p>
-            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Value pillars for steel sovereignty</h2>
+            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Built like a forest: roots, trail, canopy</h2>
             <p className="max-w-2xl text-base text-muted-foreground">
-              Four reasons steel teams choose this OS: capture company knowledge, keep humans in charge, own your stack,
-              and align every role from estimating to erection.
+              The vibe is simple: keep the knowledge, keep humans accountable, and let the system grow with your crew.
+              Steel-first today. Built to support every trade tomorrow.
             </p>
           </div>
           <div className="rounded-full border border-border/60 bg-card/60 px-4 py-2 text-xs font-medium text-muted-foreground shadow-glow backdrop-blur">
-            Foundation is free—real value starts when you own it
+            Open build. Honest trail. No bullshit.
           </div>
         </div>
 

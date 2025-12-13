@@ -119,9 +119,9 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
             <Badge className="w-fit">Waitlist & cohort</Badge>
-            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Join the first cohort of builders</h2>
+            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Join the beta cohort</h2>
             <p className="max-w-3xl text-base text-muted-foreground">
-              First 5 seats are free per org—full platform, AI actions included. Join the queue now; we invite cohorts in waves and unlock your account when your wave opens.
+              First 5 seats are free per org. Join the queue; we invite in small waves and unlock accounts when your wave opens.
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -256,8 +256,7 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
               {success && (
                 <div className="feedback success space-y-2">
                   <p>
-                    You're on the list. When your cohort opens, we'll email your invite and unlock your account to finish
-                    onboarding.
+                    You're on the list. When your wave opens, we'll email your invite and unlock your account to finish onboarding.
                   </p>
                   <p className="text-sm">
                     We sent a 6-digit code to confirm your email.{' '}
@@ -269,7 +268,7 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                 </div>
               )}
               <p className="text-sm text-muted-foreground">
-                You&apos;re in control: we log key events for auditability and keep AI in an assistive lane. No surprise overages-token usage stays transparent.
+                You&apos;re in control: key actions are logged, AI stays assistive, and compute stays transparent.
               </p>
             </div>
           </div>
@@ -285,7 +284,7 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
               </div>
             </div>
             <p className="text-base text-muted-foreground">
-              Review the source blueprint, map your guardrails, and decide how sovereign you want to be. Hosted today, sovereign tomorrow-with audit trails intact.
+              Map your guardrails, see how the system works, and decide how sovereign you want to be. Hosted today, sovereign tomorrow-with the trail intact.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -299,7 +298,7 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                 href="/auth/register?path=sovereign"
                 className={cn(buttonVariants({ variant: 'secondary', size: 'md' }), 'w-full justify-center sm:w-auto')}
               >
-                See the source blueprint
+                See the blueprint
               </Link>
             </div>
           </div>

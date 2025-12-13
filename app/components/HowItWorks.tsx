@@ -14,28 +14,28 @@ type Step = {
 
 const steps: Step[] = [
   {
-    title: 'Blueprint',
-    caption: 'Map roles, steel workflows, and guardrails.',
+    title: 'Plant the Blueprint',
+    caption: 'Map roles, workflows, and guardrails.',
     description:
-      'Map your roles, steel workflows, and approval guardrails. Decide where AI can assist—like drafting ISO forms or connection analysis packets—and where your team must always sign off.',
+      'Map your roles, workflows, and approval guardrails. Decide where AI can assist (drafting, summarizing, pre-filling) and where humans must always sign off.',
     outcome:
-      'Output: Approvals, checkpoints, and ownership boundaries are defined up front—before any build begins.',
+      'Output: Approvals, checkpoints, and ownership boundaries are defined up front-before anything goes live.',
   },
   {
-    title: 'Build & Wire Intelligence',
-    caption: 'Stand up the OS and connect your steel data.',
+    title: 'Grow the System',
+    caption: 'Stand it up and connect your reality.',
     description:
-      'We stand up your OS, connect your estimating, detailing, fabrication, and erection data, and configure human-in-the-loop checkpoints. AI can pre-fill forms and generate 3D visuals, but your experts always review and approve.',
+      'We stand up your OS, connect the data you actually use, and configure human-in-the-loop checkpoints. AI can draft and organize, but your experts approve every move that matters.',
     outcome:
-      'Output: Live steel workflows with audit trails and policy-gated AI—every action is traceable and routed back to your team.',
+      'Output: Live workflows with an audit trail-every meaningful change is traceable and tied to a person.',
   },
   {
-    title: 'Handoff & Grow',
-    caption: 'Own the code, infra, and keys (sovereign path).',
+    title: 'Take the Keys',
+    caption: 'Hosted if you want. Sovereign when you’re ready.',
     description:
-      'On the sovereign path, you own the code, infrastructure, and keys—no vendor lock-in. Extend the system with your engineers, or have us manage a fork while you keep full control. Hosted customers can upgrade to sovereignty at any time.',
+      'On the sovereign path, you own the code, infrastructure, and keys. Extend it with your engineers-or have us help you evolve your fork while you keep control. You can move from hosted to sovereign without rebuilding the whole world.',
     outcome:
-      'Output: A structural steel OS you can audit, tune, and extend—your domain, your data, your code.',
+      'Output: An OS you can audit, tune, and extend-your domain, your data, your choice.',
   },
 ]
 
@@ -77,14 +77,14 @@ export default function HowItWorksSection({ id = 'how', className }: Props) {
 
       <motion.div className="space-y-3 text-center" variants={fadeUp}>
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-          Blueprint &gt; Build &amp; Wire &gt; Handoff
+          Blueprint &gt; Grow &gt; Keys
         </div>
         <h2 id="how-it-works" className="text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-          How it works: adopt the structural steel OS in three steps
+          How it works: three calm steps, no chaos
         </h2>
         <p className="mx-auto max-w-3xl text-base text-muted-foreground">
-          A clear, human-in-the-loop rollout—purpose-built for steel fabricators, erectors, and their leadership. Move
-          from blueprint to ownership without losing control or knowledge.
+          A human-in-the-loop rollout designed to keep you in control. Start small, prove the workflow, then expand
+          across teams without losing the trail.
         </p>
       </motion.div>
 
