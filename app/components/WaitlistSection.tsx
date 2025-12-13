@@ -46,6 +46,10 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
   )
 
   const canSubmit = name.trim() !== '' && email.trim() !== '' && role.trim() !== '' && !loading
+  const verifyHref = useMemo(() => {
+    const normalized = email.trim()
+    return normalized ? `/waitlist/verify?email=${encodeURIComponent(normalized)}` : '/waitlist/verify'
+  }, [email])
 
   useEffect(() => {
     let mounted = true
@@ -250,8 +254,18 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
               </form>
               {error && <div className="feedback error">{error}</div>}
               {success && (
-                <div className="feedback success">
-                  You're on the list. When your cohort opens, we'll email your invite and unlock your account to finish onboarding.
+                <div className="feedback success space-y-2">
+                  <p>
+                    You're on the list. When your cohort opens, we'll email your invite and unlock your account to finish
+                    onboarding.
+                  </p>
+                  <p className="text-sm">
+                    We sent a 6-digit code to confirm your email.{' '}
+                    <Link href={verifyHref} className="underline">
+                      Verify your email
+                    </Link>
+                    .
+                  </p>
                 </div>
               )}
               <p className="text-sm text-muted-foreground">

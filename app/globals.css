@@ -733,6 +733,17 @@ textarea:focus {
   box-shadow: none;
 }
 
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+}
+
+.btn.secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
@@ -1027,6 +1038,7 @@ textarea:focus {
   margin-top: 0.75rem;
   color: var(--muted);
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .ambient {

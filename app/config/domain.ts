@@ -14,7 +14,7 @@ const rootDomainRaw = isProduction
 const { host: rootHost } = parseHostPort(rootDomainRaw)
 
 const protocol = isProduction ? 'https' : 'http'
-const defaultClientPort = Number(process.env.NEXT_PUBLIC_CLIENT_PORT || (isProduction ? 443 : 6666))
+const defaultClientPort = Number(process.env.NEXT_PUBLIC_CLIENT_PORT || (isProduction ? 443 : 4001))
 const defaultApiPort = Number(process.env.NEXT_PUBLIC_API_PORT || (isProduction ? 443 : 7070))
 
 const portSegment = (val?: number) => {

@@ -41,7 +41,7 @@ export default function RegisterPage() {
       if (res?.legalRequired) {
         router.push('/legal')
       } else {
-        router.push('/dashboard')
+        router.push('/auth')
       }
     } catch (err) {
       if (err instanceof ApiError) {

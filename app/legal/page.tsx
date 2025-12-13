@@ -40,7 +40,7 @@ export default function LegalAcceptancePage() {
       const pending = status?.required || []
       setRequired(pending)
       if (!pending.length) {
-        router.replace('/dashboard')
+        router.replace('/auth')
         return
       }
       await loadDocs(pending)

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
 import { ApiError, apiFetch } from '../lib/api'
@@ -12,29 +12,34 @@ type SessionUser = {
   id?: string
   email?: string
   role?: string
-  orgId?: string
 }
 
 type NavItem = {
   href: string
   label: string
-  roles?: string[]
 }
 
+const PLATFORM_ROLES = new Set(['superadmin', 'platform_admin'])
+
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/users', label: 'Users', roles: ['org_owner', 'org_admin', 'admin', 'superadmin', 'platform_admin'] },
-  { href: '/dashboard/invites', label: 'Invites', roles: ['org_owner', 'org_admin', 'admin', 'superadmin', 'platform_admin'] },
-  // Platform admins operate in the dedicated /platform portal.
-  { href: '/platform', label: 'Platform', roles: ['superadmin', 'platform_admin'] },
+  { href: '/platform', label: 'Overview' },
+  { href: '/platform/organizations', label: 'Organizations' },
+  { href: '/platform/waitlist', label: 'Waitlist' },
+  { href: '/platform/inquiries', label: 'Inquiries' },
 ]
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function PlatformLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [user, setUser] = useState<SessionUser | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [drawerCollapsed, setDrawerCollapsed] = useState(false)
   const [drawerOpenMobile, setDrawerOpenMobile] = useState(false)
+
+  const nextPath = useMemo(() => {
+    const dest = pathname && pathname.startsWith('/platform') ? pathname : '/platform'
+    return encodeURIComponent(dest)
+  }, [pathname])
 
   useEffect(() => {
     const load = async () => {
@@ -42,39 +47,37 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         const res = await apiFetch<{ user?: SessionUser }>('/auth/me')
         const currentUser = res?.user || null
         if (!currentUser?.id) {
-          router.replace('/auth/login')
+          router.replace(`/auth/login?next=${nextPath}`)
           return
         }
+
+        const role = (currentUser.role || '').toLowerCase()
+        if (!PLATFORM_ROLES.has(role)) {
+          router.replace('/dashboard')
+          return
+        }
+
         setUser(currentUser)
       } catch (err: any) {
         if (err instanceof ApiError && err.status === 401) {
-          router.replace('/auth/login')
+          router.replace(`/auth/login?next=${nextPath}`)
           return
         }
         if (err instanceof ApiError && err.status === 403 && err.message?.includes('Legal acceptance required')) {
-          router.replace('/legal')
+          router.replace(`/legal?next=${nextPath}`)
           return
         }
         setError(err instanceof ApiError ? err.message : 'Unable to load your session.')
       }
     }
     load()
-  }, [router])
-
-  const primaryRole = user?.role || 'user'
-
-  const visibleNavItems = useMemo(() => {
-    return NAV_ITEMS.filter((item) => {
-      if (!item.roles || item.roles.length === 0) return true
-      return item.roles.includes(primaryRole)
-    })
-  }, [primaryRole])
+  }, [nextPath, router])
 
   return (
     <div className="workspace-root">
-      <div className="workspace-brand-chip" onClick={() => router.push('/dashboard')}>
+      <div className="workspace-brand-chip" onClick={() => router.push('/platform')}>
         <span className="workspace-brand-logo">MYTE</span>
-        <span className="workspace-brand-text">Construction OS</span>
+        <span className="workspace-brand-text">Platform Admin</span>
       </div>
 
       <aside
@@ -91,21 +94,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             onClick={() => setDrawerOpenMobile(false)}
             aria-label="Close navigation"
           >
-            ✕
+            ×
           </button>
           <div className="workspace-org">
-            <div className="workspace-org-logo">🏗</div>
+            <div className="workspace-org-logo">P</div>
             {!drawerCollapsed && (
               <div className="workspace-org-meta">
-                <div className="workspace-org-name">Workspace</div>
-                {user?.orgId && <div className="workspace-org-id">Org {user.orgId}</div>}
+                <div className="workspace-org-name">Platform</div>
+                <div className="workspace-org-id">Seeded admin only</div>
               </div>
             )}
           </div>
         </div>
 
-        <nav className="workspace-nav" aria-label="Workspace navigation">
-          {visibleNavItems.map((item) => (
+        <nav className="workspace-nav" aria-label="Platform navigation">
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.href}
               type="button"
@@ -119,6 +122,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               {!drawerCollapsed && <span>{item.label}</span>}
             </button>
           ))}
+          <button
+            type="button"
+            className="workspace-nav-item"
+            onClick={() => {
+              router.push('/dashboard')
+              setDrawerOpenMobile(false)
+            }}
+          >
+            <span className="workspace-nav-dot" />
+            {!drawerCollapsed && <span>Workspace</span>}
+          </button>
         </nav>
 
         <div className="workspace-user">
@@ -127,7 +141,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               {!drawerCollapsed && (
                 <div className="workspace-user-meta">
                   <div className="workspace-user-name">{user.email}</div>
-                  <div className="workspace-user-role">{primaryRole}</div>
+                  <div className="workspace-user-role">{user.role}</div>
                 </div>
               )}
               <button
@@ -146,7 +160,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </button>
             </>
           ) : (
-            <Link href="/auth/login" className="workspace-signin-link">
+            <Link href={`/auth/login?next=${nextPath}`} className="workspace-signin-link">
               Sign in
             </Link>
           )}
@@ -158,7 +172,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           onClick={() => setDrawerCollapsed((prev) => !prev)}
           aria-label={drawerCollapsed ? 'Expand navigation' : 'Collapse navigation'}
         >
-          {drawerCollapsed ? '›' : '‹'}
+          {drawerCollapsed ? '>' : '<'}
         </button>
       </aside>
 
@@ -172,11 +186,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </button>
 
       <main id="main-content" className="workspace-main">
-        {error && (
-          <div className={cn('feedback error mb-4')}>
-            {error}
-          </div>
-        )}
+        {error && <div className={cn('feedback error mb-4')}>{error}</div>}
         {children}
       </main>
     </div>

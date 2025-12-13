@@ -25,7 +25,7 @@ export default function LoginPage() {
       if (res?.legalRequired) {
         router.push('/legal')
       } else {
-        router.push('/dashboard')
+        router.push('/auth')
       }
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Unable to sign in. Please try again.'
