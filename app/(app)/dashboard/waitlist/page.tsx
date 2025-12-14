@@ -6,10 +6,12 @@ import { cn } from '../../../lib/utils'
 
 type WaitlistEntry = {
   email: string
+  phone?: string | null
   name: string
   role: string
   status: string
   verifyStatus: string
+  phoneVerifyStatus?: string | null
   cohortTag?: string | null
   createdAt: string
   invitedAt?: string | null
@@ -26,6 +28,16 @@ type ListResponse = {
 const PLATFORM_ROLES = ['superadmin', 'platform_admin']
 
 export default function WaitlistAdminPage() {
+  const maskPhone = (phone?: string | null) => {
+    const trimmed = (phone || '').trim()
+    if (!trimmed) return '-'
+    const digits = trimmed.startsWith('+') ? trimmed.slice(1) : trimmed
+    if (digits.length <= 4) return trimmed
+    const last4 = digits.slice(-4)
+    const maskedPrefix = digits.slice(0, -4).replace(/\d/g, '•')
+    return `${trimmed.startsWith('+') ? '+' : ''}${maskedPrefix}${last4}`
+  }
+
   const [entries, setEntries] = useState<WaitlistEntry[]>([])
   const [page, setPage] = useState(1)
   const [limit] = useState(25)
@@ -197,10 +209,12 @@ export default function WaitlistAdminPage() {
                 <thead className="border-b border-border/60 bg-[color:var(--panel-strong)] text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                   <tr>
                     <th className="px-4 py-2">Email</th>
+                    <th className="px-4 py-2">Phone</th>
                     <th className="px-4 py-2">Name</th>
                     <th className="px-4 py-2">Role</th>
                     <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Verify</th>
+                    <th className="px-4 py-2">Email verify</th>
+                    <th className="px-4 py-2">SMS verify</th>
                     <th className="px-4 py-2">Cohort</th>
                     <th className="px-4 py-2">Created</th>
                     <th className="px-4 py-2">Invited</th>
@@ -210,13 +224,18 @@ export default function WaitlistAdminPage() {
                 </thead>
                 <tbody>
                   {entries.map((e) => (
+                    (() => {
+                      const fullyVerified = e.verifyStatus === 'verified' && e.phoneVerifyStatus === 'verified'
+                      return (
                     <tr key={e.email} className="border-b border-border/40 last:border-none">
                       <td className="px-4 py-2">{e.email}</td>
+                      <td className="px-4 py-2">{maskPhone(e.phone)}</td>
                       <td className="px-4 py-2">{e.name}</td>
                       <td className="px-4 py-2">{e.role}</td>
                       <td className="px-4 py-2">{e.status}</td>
                       <td className="px-4 py-2">{e.verifyStatus}</td>
-                      <td className="px-4 py-2">{e.cohortTag || '—'}</td>
+                      <td className="px-4 py-2">{e.phoneVerifyStatus || '-'}</td>
+                      <td className="px-4 py-2">{e.cohortTag || '-'}</td>
                       <td className="px-4 py-2">{new Date(e.createdAt).toLocaleString()}</td>
                       <td className="px-4 py-2">
                         {e.invitedAt ? new Date(e.invitedAt).toLocaleString() : '-'}
@@ -227,27 +246,33 @@ export default function WaitlistAdminPage() {
                       {canManage && (
                         <td className="px-4 py-2">
                           {e.status === 'pending-cohort' ? (
-                            <button
-                              type="button"
-                              className="btn-secondary px-3 py-1 rounded-full text-xs"
-                              onClick={() => {
-                                setApproveEmail(e.email)
-                                setApproveCohortTag(e.cohortTag || '')
-                                setShowApproveModal(true)
-                              }}
-                            >
-                              Invite now
-                            </button>
+                            fullyVerified ? (
+                              <button
+                                type="button"
+                                className="btn-secondary px-3 py-1 rounded-full text-xs"
+                                onClick={() => {
+                                  setApproveEmail(e.email)
+                                  setApproveCohortTag(e.cohortTag || '')
+                                  setShowApproveModal(true)
+                                }}
+                              >
+                                Invite now
+                              </button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Needs verification</span>
+                            )
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>
                           )}
                         </td>
                       )}
                     </tr>
+                      )
+                    })()
                   ))}
                   {entries.length === 0 && (
                     <tr>
-                      <td className="px-4 py-6 text-center text-muted-foreground" colSpan={canManage ? 10 : 9}>
+                      <td className="px-4 py-6 text-center text-muted-foreground" colSpan={canManage ? 12 : 11}>
                         No waitlist entries yet.
                       </td>
                     </tr>
@@ -356,4 +381,3 @@ export default function WaitlistAdminPage() {
     </section>
   )
 }
-

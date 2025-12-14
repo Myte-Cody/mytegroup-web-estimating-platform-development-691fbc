@@ -17,7 +17,7 @@ import WaitlistSection from '../components/WaitlistSection'
 import { Badge } from '../components/ui/badge'
 import { buttonVariants } from '../components/ui/button'
 
-const CTA_PRIMARY = 'Join the beta'
+const CTA_PRIMARY = 'Request early access'
 const CTA_SECONDARY = 'Sign in'
 
 export default function LandingPage() {
@@ -68,7 +68,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="/auth/register" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+                <Link href="#cta" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
                   {CTA_PRIMARY}
                 </Link>
                 <Link href="/auth/login" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>

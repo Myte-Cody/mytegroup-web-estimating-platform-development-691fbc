@@ -152,7 +152,7 @@ export default function LegalAcceptancePage() {
         ))}
         <div className="form-links">
           <Link href="/auth/login">Sign in</Link>
-          <Link href="/auth/register">Create account</Link>
+          <Link href="/#cta">Request early access</Link>
         </div>
       </div>
     </AuthShell>

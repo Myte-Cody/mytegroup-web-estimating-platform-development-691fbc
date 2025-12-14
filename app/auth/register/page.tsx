@@ -1,29 +1,58 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { FormEvent, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react'
 import AuthShell from '../../components/AuthShell'
 import { ApiError, apiFetch } from '../../lib/api'
 
 export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell
+          title="Create your account"
+          subtitle="Loading invite details..."
+          badge="Early access"
+        >
+          <div className="feedback">Loading…</div>
+        </AuthShell>
+      }
+    >
+      <RegisterPageInner />
+    </Suspense>
+  )
+}
+
+function RegisterPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const inviteToken = useMemo(() => (searchParams.get('invite') || '').trim(), [searchParams])
+  const inviteEmail = useMemo(() => (searchParams.get('email') || '').trim(), [searchParams])
+  const hasInvite = inviteToken.length > 0
+  const emailLocked = inviteEmail.length > 0
+
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(inviteEmail)
   const [password, setPassword] = useState('')
   const [organizationName, setOrganizationName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [waitlistBlocked, setWaitlistBlocked] = useState(false)
   const [domainBlocked, setDomainBlocked] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
   const [legalAccepted, setLegalAccepted] = useState(false)
+
+  useEffect(() => {
+    if (emailLocked) setEmail(inviteEmail)
+  }, [emailLocked, inviteEmail])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setError(null)
-    setWaitlistBlocked(false)
     setDomainBlocked(false)
+    setNeedsVerification(false)
     setLoading(true)
     try {
       const res = await apiFetch<{ legalRequired?: boolean }>('/auth/register', {
@@ -32,9 +61,10 @@ export default function RegisterPage() {
           username: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
           firstName: firstName.trim() || undefined,
           lastName: lastName.trim() || undefined,
-          email,
+          email: email.trim(),
           password,
           organizationName: organizationName || undefined,
+          inviteToken,
           legalAccepted,
         }),
       })
@@ -46,14 +76,14 @@ export default function RegisterPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         const msg = err.message || ''
-        if (err.status === 403 && msg.includes('invite-only')) {
-          setWaitlistBlocked(true)
-          setError(
-            "You're in line. Registration is invite-only while we onboard cohorts during business hours. We'll email your invite as soon as your wave opens."
-          )
+        if (err.status === 403 && msg.toLowerCase().includes('verify your email')) {
+          setNeedsVerification(true)
+          setError(msg)
         } else if (err.status === 403 && msg.toLowerCase().includes('your company already has access')) {
           setDomainBlocked(true)
           setError('Your company already has access. Please ask your org admin to invite you.')
+        } else if (err.status === 403) {
+          setError(msg || 'Unable to create your account right now. Please try again.')
         } else {
           setError(msg || 'Unable to create your account right now. Please try again.')
         }
@@ -65,10 +95,38 @@ export default function RegisterPage() {
     }
   }
 
+  if (!hasInvite) {
+    return (
+      <AuthShell
+        title="Invite required"
+        subtitle="MYTE is invite-only while we onboard verified companies in waves. We verify work email + phone to stop fake accounts and keep org workspaces private."
+        badge="Invite-only"
+        footer={
+          <div className="form-links">
+            <Link href="/auth/login">Sign in</Link>
+            <Link href="/">Back to landing</Link>
+          </div>
+        }
+      >
+        <div className="form-grid">
+          <div className="feedback subtle">
+            Already requested early access? Check your email for an invite link. If you don&apos;t have one yet, request early access and we&apos;ll invite you when your wave opens.
+          </div>
+          <Link href="/#cta" className="btn primary">
+            Request early access
+          </Link>
+          <Link href="https://calendly.com/ahmed-mekallach/thought-exchange" className="btn secondary" target="_blank">
+            Book a build session
+          </Link>
+        </div>
+      </AuthShell>
+    )
+  }
+
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Claim an early-access seat and keep your estimating workflows secure."
+      subtitle="You're invited. Claim an early-access seat and keep your estimating workflows secure."
       badge="Early access"
     >
       <form className="form-grid" onSubmit={handleSubmit}>
@@ -101,8 +159,10 @@ export default function RegisterPage() {
             placeholder="you@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            readOnly={emailLocked}
             required
           />
+          {emailLocked && <small className="microcopy">This invite is tied to {inviteEmail}.</small>}
         </label>
         <label>
           <span>Password</span>
@@ -127,19 +187,18 @@ export default function RegisterPage() {
           />
         </label>
         {error && <div className="feedback error">{error}</div>}
-        {waitlistBlocked && (
-          <div className="feedback subtle">
-            Want to move faster? You can{' '}
-            <Link href="https://calendly.com/ahmed-mekallach/thought-exchange" target="_blank">
-              book a build session
-            </Link>{' '}
-            to walk through the workspace while your cohort is queued.
-          </div>
-        )}
         {domainBlocked && (
           <div className="feedback subtle">
             Ask your org owner or admin to invite you from inside MYTE Construction OS so your account stays tied to the
             right workspace.
+          </div>
+        )}
+        {needsVerification && (
+          <div className="feedback subtle">
+            <Link href={`/waitlist/verify?email=${encodeURIComponent(email.trim())}`} className="underline">
+              Verify your email + phone
+            </Link>{' '}
+            to unlock registration.
           </div>
         )}
         <label className="flex items-start gap-2 text-sm">

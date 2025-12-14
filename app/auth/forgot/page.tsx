@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
         </button>
         <div className="form-links">
           <Link href="/auth/login">Back to sign in</Link>
-          <Link href="/auth/register">Create account</Link>
+          <Link href="/#cta">Request early access</Link>
         </div>
       </form>
     </AuthShell>

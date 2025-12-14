@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, Loader2, MailCheck, ShieldQuestion, X } from 'lucide-react'
 
@@ -51,8 +52,6 @@ export default function ContactModal({ open, onClose }: Props) {
   const [verificationStatus, setVerificationStatus] = useState<VerificationState>('idle')
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null)
   const [verificationError, setVerificationError] = useState<string | null>(null)
-  const [joinWaitlist, setJoinWaitlist] = useState(false)
-  const [waitlistRole, setWaitlistRole] = useState('')
   const [loading, setLoading] = useState(false)
   const [verifyLoading, setVerifyLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -97,7 +96,6 @@ export default function ContactModal({ open, onClose }: Props) {
     setVerificationMessage(null)
     setVerificationCode('')
     setVerificationStatus('idle')
-    setJoinWaitlist(false)
   }, [normalizedEmail, emailIsValid, requiresVerification, open])
 
   useEffect(() => {
@@ -128,8 +126,6 @@ export default function ContactModal({ open, onClose }: Props) {
     setVerificationStatus('idle')
     setVerificationError(null)
     setVerificationMessage(null)
-    setJoinWaitlist(false)
-    setWaitlistRole('')
     setLoading(false)
     setVerifyLoading(false)
     setSubmitted(false)
@@ -203,8 +199,6 @@ export default function ContactModal({ open, onClose }: Props) {
           email: normalizedEmail,
           message: message.trim(),
           source: 'footer-contact',
-          joinWaitlist: joinWaitlist && !isPersonal,
-          waitlistRole: joinWaitlist && !isPersonal ? waitlistRole.trim() || undefined : undefined,
         }),
       })
       setSubmitted(true)
@@ -371,33 +365,12 @@ export default function ContactModal({ open, onClose }: Props) {
             </div>
 
             {emailIsValid && !isPersonal && (
-              <div className="contact-optin">
-                <label className="contact-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={joinWaitlist}
-                    onChange={(e) => setJoinWaitlist(e.target.checked)}
-                  />
-                  <div>
-                    <div className="font-semibold text-[color:var(--text)]">Also join the waitlist</div>
-                    <div className="contact-helper">
-                      Company email detected. We can add you to the waitlist with the same verified email.
-                    </div>
-                  </div>
-                </label>
-                {joinWaitlist && (
-                  <label className="contact-label">
-                    <span className="contact-label__text">Role / trade (optional)</span>
-                    <input
-                      type="text"
-                      name="waitlistRole"
-                      value={waitlistRole}
-                      onChange={(e) => setWaitlistRole(e.target.value)}
-                      className="contact-input"
-                      placeholder="Estimator, PM, fabricator..."
-                    />
-                  </label>
-                )}
+              <div className="contact-helper">
+                Looking for early access?{' '}
+                <Link href="/#cta" className="underline">
+                  Request early access
+                </Link>{' '}
+                (work email + phone verification required).
               </div>
             )}
 

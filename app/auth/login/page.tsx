@@ -72,7 +72,7 @@ export default function LoginPage() {
         </button>
         <div className="form-links">
           <Link href="/auth/forgot">Forgot password?</Link>
-          <Link href="/auth/register">Create an account</Link>
+          <Link href="/#cta">Request early access</Link>
         </div>
       </form>
     </AuthShell>

@@ -23,11 +23,13 @@ const FALLBACK_FREE_SEATS_PER_ORG = process.env.NEXT_PUBLIC_FREE_SEATS_PER_ORG |
 export default function WaitlistSection({ id = 'cta', className }: Props) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [role, setRole] = useState('')
   const [preCreateAccount, setPreCreateAccount] = useState(false)
   const [marketingConsent, setMarketingConsent] = useState(true)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [waitlistStatus, setWaitlistStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [waitlistDisplay, setWaitlistDisplay] = useState(FALLBACK_WAITLIST_COUNT)
   const [freeSeatsPerOrg, setFreeSeatsPerOrg] = useState(FALLBACK_FREE_SEATS_PER_ORG)
@@ -37,15 +39,17 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
     () => ({
       name,
       email,
+      phone,
       role,
       source: 'landing-structural-steel',
       preCreateAccount,
       marketingConsent,
     }),
-    [name, email, role, preCreateAccount, marketingConsent]
+    [name, email, phone, role, preCreateAccount, marketingConsent]
   )
 
-  const canSubmit = name.trim() !== '' && email.trim() !== '' && role.trim() !== '' && !loading
+  const phoneIsValid = useMemo(() => /^\+[1-9]\d{1,14}$/.test(phone.trim()), [phone])
+  const canSubmit = name.trim() !== '' && email.trim() !== '' && role.trim() !== '' && phoneIsValid && !loading
   const verifyHref = useMemo(() => {
     const normalized = email.trim()
     return normalized ? `/waitlist/verify?email=${encodeURIComponent(normalized)}` : '/waitlist/verify'
@@ -100,11 +104,12 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
     setLoading(true)
     setError(null)
     try {
-      await apiFetch(WAITLIST_ENDPOINT, {
+      const res = await apiFetch<{ status?: string }>(WAITLIST_ENDPOINT, {
         method: 'POST',
         body: JSON.stringify(payload),
       })
       setSuccess(true)
+      setWaitlistStatus(res?.status || null)
       trackEvent('waitlist_submit', { email, role, preCreateAccount, marketingConsent })
     } catch (err: any) {
       setError(err?.message || 'Unable to join the waitlist right now. Please try again.')
@@ -157,8 +162,8 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
             <div className="relative mt-5 space-y-4">
               <h3 className="text-2xl font-semibold leading-tight text-[var(--text)]">Claim a free seat</h3>
               <p className="text-muted-foreground">
-                We invite cohorts in waves (typically inside 36 hours during 9–5). Join the waitlist now and optionally pre-create your
-                account; when your wave opens, your email gets instant clearance to finish onboarding.
+                Too many fake accounts. We verify your work email + phone as baseline security before access-because bids, contacts, and
+                project data are sensitive. We onboard in waves (typically inside 36 hours during 9-5) so support stays human.
               </p>
               <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
               <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)]">
@@ -188,6 +193,22 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                 />
                 <span className="text-xs font-normal text-muted-foreground">
                   Company email only (no Gmail, Outlook, Yahoo, iCloud, etc.).
+                </span>
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)]">
+                Phone (SMS)
+                <input
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="+15145551234"
+                  className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
+                  aria-required="true"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <span className="text-xs font-normal text-muted-foreground">
+                  Use E.164 format (include country code). We send a 6-digit SMS code.
                 </span>
               </label>
                 <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)] md:col-span-2">
@@ -240,31 +261,33 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                   >
                     {loading ? 'Saving...' : success ? "You're in the queue" : 'Join the waitlist'}
                   </button>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => trackEvent('cta_create_account_click', { source: 'waitlist' })}
-                    className={cn(
-                      buttonVariants({ variant: 'secondary', size: 'lg' }),
-                      'w-full justify-center md:w-auto'
-                    )}
-                  >
-                    Create account now
-                  </Link>
                 </div>
               </form>
               {error && <div className="feedback error">{error}</div>}
               {success && (
                 <div className="feedback success space-y-2">
-                  <p>
-                    You're on the list. When your wave opens, we'll email your invite and unlock your account to finish onboarding.
-                  </p>
-                  <p className="text-sm">
-                    We sent a 6-digit code to confirm your email.{' '}
-                    <Link href={verifyHref} className="underline">
-                      Verify your email
-                    </Link>
-                    .
-                  </p>
+                  {waitlistStatus === 'ok' ? (
+                    <p>
+                      If this email already has access, sign in instead. If you meant to request early access for a different
+                      company, submit a different work email.
+                    </p>
+                  ) : waitlistStatus === 'verified' ? (
+                    <p>You're already verified and in line. We'll email your invite when your wave opens.</p>
+                  ) : (
+                    <>
+                      <p>
+                        You're verified-in-progress and in line. Confirm your email + phone to lock your spot; when your wave opens,
+                        we'll send an invite link to finish onboarding.
+                      </p>
+                      <p className="text-sm">
+                        We sent 6-digit codes to your email and phone.{' '}
+                        <Link href={verifyHref} className="underline">
+                          Verify now
+                        </Link>
+                        .
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
               <p className="text-sm text-muted-foreground">
@@ -295,10 +318,10 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                 Book a build session
               </Link>
               <Link
-                href="/auth/register?path=sovereign"
+                href="/legal"
                 className={cn(buttonVariants({ variant: 'secondary', size: 'md' }), 'w-full justify-center sm:w-auto')}
               >
-                See the blueprint
+                Review privacy & terms
               </Link>
             </div>
           </div>
