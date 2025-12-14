@@ -13,7 +13,7 @@ type LegalDoc = {
 }
 
 type Status = {
-  required: string[]
+  required: Array<string | { type: string; version?: string }>
 }
 
 const placeholderText: Record<string, string> = {
@@ -32,12 +32,18 @@ export default function LegalAcceptancePage() {
   const [accepting, setAccepting] = useState<string | null>(null)
   const [readonly, setReadonly] = useState(false)
 
+  const normalizeRequiredTypes = (value: Status['required'] | undefined) => {
+    return (value || [])
+      .map((item) => (typeof item === 'string' ? item : item?.type))
+      .filter(Boolean) as string[]
+  }
+
   const loadStatus = async () => {
     setLoading(true)
     setError(null)
     try {
       const status = await apiFetch<Status>('/legal/acceptance/status')
-      const pending = status?.required || []
+      const pending = normalizeRequiredTypes(status?.required)
       setRequired(pending)
       if (!pending.length) {
         router.replace('/auth')

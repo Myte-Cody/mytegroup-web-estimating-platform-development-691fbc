@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "ISC",
   "scripts": {
-    "dev": "next dev -p 4001",
+    "dev": "node scripts/run-next.mjs dev",
     "build": "next build",
-    "start": "next start -p 4001"
+    "start": "node scripts/run-next.mjs start"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
