@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
 import { ApiError, apiFetch } from '../lib/api'
+import { hasAnyRole } from '../lib/rbac'
 import { cn } from '../lib/utils'
 
 type SessionUser = {
   id?: string
   email?: string
   role?: string
+  roles?: string[]
   orgId?: string
 }
 
@@ -23,10 +25,13 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/users', label: 'Users', roles: ['org_owner', 'org_admin', 'admin', 'superadmin', 'platform_admin'] },
-  { href: '/dashboard/invites', label: 'Invites', roles: ['org_owner', 'org_admin', 'admin', 'superadmin', 'platform_admin'] },
+  { href: '/dashboard/projects', label: 'Projects', roles: ['viewer'] },
+  { href: '/dashboard/offices', label: 'Offices', roles: ['viewer'] },
+  { href: '/dashboard/settings', label: 'Settings', roles: ['admin'] },
+  { href: '/dashboard/users', label: 'Users', roles: ['admin'] },
+  { href: '/dashboard/invites', label: 'Invites', roles: ['admin'] },
   // Platform admins operate in the dedicated /platform portal.
-  { href: '/platform', label: 'Platform', roles: ['superadmin', 'platform_admin'] },
+  { href: '/platform', label: 'Platform', roles: ['platform_admin'] },
 ]
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -65,10 +70,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const visibleNavItems = useMemo(() => {
     return NAV_ITEMS.filter((item) => {
-      if (!item.roles || item.roles.length === 0) return true
-      return item.roles.includes(primaryRole)
+      return hasAnyRole(user, item.roles)
     })
-  }, [primaryRole])
+  }, [user])
 
   return (
     <div className="workspace-root">
