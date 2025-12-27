@@ -26,12 +26,12 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/dashboard/projects', label: 'Projects', roles: ['viewer'] },
-  { href: '/dashboard/offices', label: 'Offices', roles: ['viewer'] },
+  { href: '/dashboard/org-locations', label: 'Org locations', roles: ['viewer'] },
+  { href: '/dashboard/settings/people', label: 'People', roles: ['admin'] },
   { href: '/dashboard/settings', label: 'Settings', roles: ['admin'] },
   { href: '/dashboard/users', label: 'Users', roles: ['admin'] },
   { href: '/dashboard/invites', label: 'Invites', roles: ['admin'] },
-  // Platform admins operate in the dedicated /platform portal.
-  { href: '/platform', label: 'Platform', roles: ['platform_admin'] },
+  { href: '/dashboard/settings/graph-edges', label: 'Graph', roles: ['admin'] },
 ]
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -73,6 +73,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       return hasAnyRole(user, item.roles)
     })
   }, [user])
+  const showPlatformBridge = hasAnyRole(user, ['platform_admin'])
 
   return (
     <div className="workspace-root">
@@ -126,6 +127,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="workspace-user">
+          {showPlatformBridge && (
+            <button
+              type="button"
+              className="workspace-nav-item workspace-bridge"
+              onClick={() => {
+                router.push('/platform')
+                setDrawerOpenMobile(false)
+              }}
+            >
+              <span className="workspace-nav-dot" />
+              {!drawerCollapsed && <span>Platform Admin</span>}
+            </button>
+          )}
           {user ? (
             <>
               {!drawerCollapsed && (

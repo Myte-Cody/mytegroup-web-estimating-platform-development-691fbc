@@ -1,0 +1,51 @@
+person_type,display_name,email,phone,company_name,title,org_location_name,ironworker_number,union_local,notes
+internal_staff,Alice Johnson,alice.johnson@example.com,+15555550101,,CEO,HQ,,,Seed exec
+internal_staff,Mark Rivera,mark.rivera@example.com,+15555550102,,VP Operations,HQ,,,Operations lead
+internal_staff,Sara Kim,sara.kim@example.com,+15555550103,,Project Manager,HQ,,,Key PM
+internal_staff,Daniel Lee,daniel.lee@example.com,+15555550104,,Superintendent,Field Office,,,Superintendent
+internal_staff,Priya Patel,priya.patel@example.com,+15555550105,,Estimator,HQ,,,Estimator
+internal_staff,Jorge Martinez,jorge.martinez@example.com,+15555550106,,Safety Officer,Shop,,,Safety lead
+internal_staff,Emily Chen,emily.chen@example.com,+15555550107,,Accountant,HQ,,,Accounting
+internal_staff,Nathan Brooks,nathan.brooks@example.com,+15555550108,,Purchasing,HQ,,,Purchasing
+internal_staff,Olivia Stone,olivia.stone@example.com,+15555550109,,HR Manager,HQ,,,HR
+internal_staff,Liam Walker,liam.walker@example.com,+15555550110,,Field Engineer,Field Office,,,Field engineer
+internal_union,Bob Steel,bob.steel@example.com,+15555550201,,Ironworker,Shop,1001,63,Union crew
+internal_union,Carlos Weld,carlos.weld@example.com,+15555550202,,Ironworker,Shop,1002,63,Union crew
+internal_union,Ethan Riggs,ethan.riggs@example.com,+15555550203,,Ironworker,Shop,1003,63,Union crew
+internal_union,Frank Bolts,frank.bolts@example.com,+15555550204,,Ironworker,Shop,1004,63,Union crew
+internal_union,Grace Sparks,grace.sparks@example.com,+15555550205,,Ironworker,Shop,1005,63,Union crew
+internal_union,Hannah Crane,hannah.crane@example.com,+15555550206,,Ironworker,Shop,1006,63,Union crew
+internal_union,Ivan Torch,ivan.torch@example.com,+15555550207,,Ironworker,Shop,1007,63,Union crew
+internal_union,Julia Beam,julia.beam@example.com,+15555550208,,Ironworker,Shop,1008,63,Union crew
+internal_union,Kevin Rivet,kevin.rivet@example.com,+15555550209,,Ironworker,Shop,1009,63,Union crew
+internal_union,Mia Plate,mia.plate@example.com,+15555550210,,Ironworker,Shop,1010,63,Union crew
+external_person,Tom Acme,tom.acme@acmesteel.example,+15555550301,Acme Steel,Account Manager,,,,Primary contact
+external_person,Nina Acme,"nina@acmesteel.example; nina.ops@acmesteel.example",+15555550302,Acme Steel,Operations Coordinator,,,,Multiple emails supported
+external_person,Leo Acme,leo.acme@acmesteel.example,+15555550303,Acme Steel,Estimator,,,,Backup contact
+external_person,Uma Northwind,uma@northwindconcrete.example,+15555550401,Northwind Concrete,Dispatcher,,,,Dispatcher
+external_person,Victor Northwind,victor@northwindconcrete.example,+15555550402,Northwind Concrete,Sales Rep,,,,Sales rep
+external_person,Wendy Northwind,wendy@northwindconcrete.example,+15555550403,Northwind Concrete,Plant Manager,,,,Plant manager
+external_person,Sam Skyline,sam@skylineelectrical.example,+15555550501,Skyline Electrical,Foreman,,,,Foreman
+external_person,Tara Skyline,tara@skylineelectrical.example,+15555550502,Skyline Electrical,PM,,,,PM contact
+external_person,Owen Skyline,owen@skylineelectrical.example,+15555550503,Skyline Electrical,Estimator,,,,Estimator
+external_person,Paula Blue,paula@blueriverplumbing.example,+15555550601,Blue River Plumbing,Dispatcher,,,,Dispatcher
+external_person,Quinn Blue,quinn@blueriverplumbing.example,+15555550602,Blue River Plumbing,PM,,,,PM
+external_person,Ryan Blue,ryan@blueriverplumbing.example,+15555550603,Blue River Plumbing,Estimator,,,,Estimator
+external_person,Ava Apex,ava@apexsafety.example,+15555550701,Apex Safety Supplies,Account Rep,,,,Safety supplier
+external_person,Ben Apex,ben@apexsafety.example,+15555550702,Apex Safety Supplies,Warehouse Lead,,,,Warehouse
+external_person,Cara Apex,cara@apexsafety.example,+15555550703,Apex Safety Supplies,Inside Sales,,,,Inside sales
+external_person,Drew Titan,drew@titancrane.example,+15555550801,Titan Crane Services,Dispatcher,,,,Crane dispatch
+external_person,Ella Titan,ella@titancrane.example,+15555550802,Titan Crane Services,Operator Lead,,,,Operator lead
+external_person,Finn Titan,finn@titancrane.example,+15555550803,Titan Crane Services,Estimator,,,,Estimator
+external_person,Gina Redwood,gina@redwoodscaffold.example,+15555550901,Redwood Scaffolding,PM,,,,Scaffold PM
+external_person,Hugo Redwood,hugo@redwoodscaffold.example,+15555550902,Redwood Scaffolding,Foreman,,,,Foreman
+external_person,Iris Redwood,iris@redwoodscaffold.example,+15555550903,Redwood Scaffolding,Estimator,,,,Estimator
+external_person,Jack Harbor,jack@harborlogistics.example,+15555551001,Harbor Logistics,Coordinator,,,,Logistics
+external_person,Kara Harbor,kara@harborlogistics.example,+15555551002,Harbor Logistics,Dispatcher,,,,Dispatch
+external_person,Luke Harbor,luke@harborlogistics.example,+15555551003,Harbor Logistics,Account Rep,,,,Account rep
+external_person,Maya Keystone,maya@keystonesurvey.example,+15555551101,Keystone Surveying,Survey Lead,,,,Survey lead
+external_person,Noah Keystone,noah@keystonesurvey.example,+15555551102,Keystone Surveying,Coordinator,,,,Coordinator
+external_person,Opal Keystone,opal@keystonesurvey.example,+15555551103,Keystone Surveying,PM,,,,PM
+external_person,Pete Vertex,pete@vertexeng.example,+15555551201,Vertex Engineering,Engineer,,,,Engineer
+external_person,Quincy Vertex,quincy@vertexeng.example,+15555551202,Vertex Engineering,PM,,,,PM
+external_person,Riley Acme,riley.acme@acmesteel.example,+15555550304,Acme Steel,Project Manager,,,,Additional contact

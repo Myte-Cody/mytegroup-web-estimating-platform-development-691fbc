@@ -55,9 +55,9 @@ export default function SettingsHubPage() {
       href: '/dashboard/settings/people',
     },
     {
-      title: 'Offices',
-      description: 'Internal offices and divisions for your organization.',
-      href: '/dashboard/settings/offices',
+      title: 'Org locations',
+      description: 'Org locations (internal offices and divisions).',
+      href: '/dashboard/settings/org-locations',
     },
     {
       title: 'Seats',
@@ -71,8 +71,18 @@ export default function SettingsHubPage() {
     },
     {
       title: 'Companies',
-      description: 'External companies directory (from People contacts).',
+      description: 'External companies and locations (CRM foundation).',
       href: '/dashboard/settings/companies',
+    },
+    {
+      title: 'Taxonomy',
+      description: 'Org-defined lists for types, tags, skills, and graph edge types.',
+      href: '/dashboard/settings/taxonomy',
+    },
+    {
+      title: 'Graph edges',
+      description: 'Explore and manage graph relationships (dependencies, primary contacts, reporting).',
+      href: '/dashboard/settings/graph-edges',
     },
   ]
 

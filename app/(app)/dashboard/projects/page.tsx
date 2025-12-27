@@ -270,7 +270,7 @@ export default function ProjectsPage() {
         const qs = new URLSearchParams()
         if (includeArchivedQuery) qs.set('includeArchived', '1')
 
-        const fetches: Array<Promise<any>> = [apiFetch<Project[]>(`/projects?${qs.toString()}`), apiFetch<Office[]>(`/offices?${qs.toString()}`)]
+        const fetches: Array<Promise<any>> = [apiFetch<Project[]>(`/projects?${qs.toString()}`), apiFetch<Office[]>(`/org-locations?${qs.toString()}`)]
         const includeOrg = !!currentUser.orgId && hasAnyRole(currentUser, ['admin'])
         if (includeOrg) {
           fetches.push(apiFetch<Organization>(`/organizations/${currentUser.orgId}`))
@@ -463,9 +463,9 @@ export default function ProjectsPage() {
 
                   <label className="flex flex-col gap-1 text-sm font-semibold text-[color:var(--text)]">
                     <div className="flex items-center justify-between gap-2">
-                      <span>Office (optional)</span>
-                      <Link href="/dashboard/offices" className="text-xs text-[color:var(--accent)] hover:underline">
-                        Manage offices
+                      <span>Org location (optional)</span>
+                      <Link href="/dashboard/org-locations" className="text-xs text-[color:var(--accent)] hover:underline">
+                        Manage org locations
                       </Link>
                     </div>
                     <select

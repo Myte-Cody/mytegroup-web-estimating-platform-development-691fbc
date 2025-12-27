@@ -29,6 +29,13 @@ type Organization = {
   updatedAt?: string
 }
 
+type OrganizationsListResponse = {
+  data: Organization[]
+  total: number
+  page: number
+  limit: number
+}
+
 type UserRecord = {
   _id?: string
   id?: string
@@ -145,6 +152,8 @@ const formatTimestamp = (value?: string) => {
 export default function DashboardPage() {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [org, setOrg] = useState<Organization | null>(null)
+  const [orgChoices, setOrgChoices] = useState<Organization[]>([])
+  const [needsOrgScope, setNeedsOrgScope] = useState(false)
   const [users, setUsers] = useState<UserRecord[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
   const [events, setEvents] = useState<EventLog[]>([])
@@ -218,9 +227,26 @@ export default function DashboardPage() {
         }
 
         if (!currentUser.orgId) {
+          if (role === 'superadmin' || role === 'platform_admin') {
+            setNeedsOrgScope(true)
+            setOrg(null)
+            setUsers([])
+            setInvites([])
+            setEvents([])
+            try {
+              const res = await apiFetch<OrganizationsListResponse>('/organizations?limit=50')
+              setOrgChoices(Array.isArray(res?.data) ? res.data : [])
+            } catch (err: any) {
+              setError(err instanceof ApiError ? err.message : 'Unable to load organizations.')
+            }
+            return
+          }
           setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
           return
         }
+
+        setNeedsOrgScope(false)
+        setOrgChoices([])
 
         const orgId = currentUser.orgId
         const fetches: Array<Promise<any>> = [
@@ -319,7 +345,62 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {error && <div className="feedback error">{error}</div>}
+      {error && <div className="feedback error">{error}</div>}
+
+        {needsOrgScope && (
+          <div className="glass-card space-y-3">
+            <h2>Select an organization</h2>
+            <p className="muted">
+              Your session has platform access but no active workspace org selected. Choose an organization to enter its
+              workspace context.
+            </p>
+
+            {orgChoices.length === 0 ? (
+              <div className="muted">
+                No organizations found. Create one in the <Link href="/platform">Platform portal</Link>.
+              </div>
+            ) : (
+              <div className="grid gap-2 md:grid-cols-2">
+                {orgChoices.map((choice) => {
+                  const id = choice.id || choice._id || ''
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className="btn secondary justify-between"
+                      disabled={loading || !id}
+                      onClick={async () => {
+                        if (!id) return
+                        setLoading(true)
+                        setError(null)
+                        try {
+                          const res = await apiFetch<{ user?: SessionUser }>('/auth/set-org', {
+                            method: 'POST',
+                            body: JSON.stringify({ orgId: id }),
+                          })
+                          setUser(res?.user || null)
+                          setNeedsOrgScope(false)
+                          setOrgChoices([])
+                          refresh()
+                        } catch (err: any) {
+                          setError(err instanceof ApiError ? err.message : 'Unable to set organization scope.')
+                        } finally {
+                          setLoading(false)
+                        }
+                      }}
+                    >
+                      <span className="text-left">
+                        <div className="font-semibold">{choice.name}</div>
+                        <div className="muted text-xs">{id}</div>
+                      </span>
+                      <span className="text-sm">Use</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {hasAdminDashboard && orgLegalHold && (
           <div className="feedback error">

@@ -1223,6 +1223,10 @@ textarea:focus {
   font-size: 0.75rem;
 }
 
+.workspace-bridge {
+  margin-bottom: 0.5rem;
+}
+
 .workspace-user-meta {
   display: flex;
   flex-direction: column;
