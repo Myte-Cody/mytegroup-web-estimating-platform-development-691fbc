@@ -26,6 +26,15 @@ type Invite = {
   personId?: string | null
 }
 
+type Organization = {
+  _id?: string
+  id?: string
+  name?: string
+  archivedAt?: string | null
+  piiStripped?: boolean
+  legalHold?: boolean
+}
+
 type Person = {
   _id?: string
   id?: string
@@ -66,6 +75,7 @@ const getPrimaryEmail = (person: Person | null) => {
 
 export default function InvitesPage() {
   const [user, setUser] = useState<SessionUser | null>(null)
+  const [org, setOrg] = useState<Organization | null>(null)
   const [invites, setInvites] = useState<Invite[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -82,6 +92,10 @@ export default function InvitesPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const canView = useMemo(() => hasAnyRole(user, ['admin']), [user])
+  const orgLegalHold = !!org?.legalHold
+  const orgArchived = !!org?.archivedAt
+  const orgPiiStripped = !!org?.piiStripped
+  const orgBlocked = orgLegalHold || orgArchived
   const refresh = () => setReloadAt(Date.now())
 
   useEffect(() => {
@@ -93,8 +107,14 @@ export default function InvitesPage() {
         const me = await apiFetch<{ user?: SessionUser }>('/auth/me')
         const currentUser = me?.user || null
         setUser(currentUser)
+        setOrg(null)
         if (!currentUser?.id) {
           setError('You need to sign in to manage invites.')
+          setInvites([])
+          return
+        }
+        if (!currentUser?.orgId) {
+          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
           setInvites([])
           return
         }
@@ -103,8 +123,23 @@ export default function InvitesPage() {
           setInvites([])
           return
         }
-        const res = await apiFetch<Invite[]>('/invites')
-        setInvites(Array.isArray(res) ? res : [])
+        const results = await Promise.allSettled([
+          apiFetch<Invite[]>('/invites'),
+          apiFetch<Organization>(`/organizations/${currentUser.orgId}`),
+        ])
+        const invitesRes = results[0]
+        const orgRes = results[1]
+        if (invitesRes.status === 'fulfilled') {
+          setInvites(Array.isArray(invitesRes.value) ? invitesRes.value : [])
+        } else {
+          throw invitesRes.reason
+        }
+        if (orgRes.status === 'fulfilled') {
+          setOrg(orgRes.value)
+        } else {
+          const err = orgRes.reason
+          setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load organization.'))
+        }
       } catch (err: any) {
         const message =
           err instanceof ApiError
@@ -172,6 +207,7 @@ export default function InvitesPage() {
     if (!canView) return false
     if (!selectedPersonId) return false
     if (!selectedPrimaryEmail) return false
+    if (orgBlocked) return false
     if (!inviteRole.trim()) return false
     if (submitting) return false
     if (pendingInviteForSelected) return false
@@ -189,6 +225,7 @@ export default function InvitesPage() {
     selectedPerson?.userId,
     selectedPerson?.personType,
     selectedPerson?.ironworkerNumber,
+    orgBlocked,
   ])
 
   const handleCreateInvite = async (event: FormEvent) => {
@@ -243,6 +280,15 @@ export default function InvitesPage() {
 
         {actionMessage && <div className="feedback success">{actionMessage}</div>}
         {error && <div className="feedback error">{error}</div>}
+        {orgLegalHold && (
+          <div className="feedback subtle">
+            Legal hold is enabled for this organization. Invites are blocked until the hold is lifted.
+          </div>
+        )}
+        {orgArchived && <div className="feedback subtle">This organization is archived. Invites are blocked.</div>}
+        {orgPiiStripped && (
+          <div className="feedback subtle">PII stripped is enabled for this organization. Some fields may be redacted.</div>
+        )}
 
         {canView && (
           <form onSubmit={handleCreateInvite} className="space-y-3 rounded-2xl border border-border/60 bg-white/5 p-4">
@@ -379,7 +425,7 @@ export default function InvitesPage() {
                   const inviteId = inv.id || inv._id || ''
                   const expires = inv.tokenExpires ? new Date(inv.tokenExpires).toLocaleString() : '-'
                   const accepted = inv.acceptedAt ? new Date(inv.acceptedAt).toLocaleString() : '-'
-                  const canResend = inv.status === 'pending' && !!inviteId
+                  const canResend = !orgBlocked && inv.status === 'pending' && !!inviteId
                   return (
                     <tr key={inviteId || inv.email} className={cn('border-t border-border/60')}>
                       <td className="px-4 py-2 font-medium text-[color:var(--text)]">{inv.email}</td>

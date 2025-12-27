@@ -38,6 +38,15 @@ type CompanyLocation = {
   archivedAt?: string | null
 }
 
+type Organization = {
+  _id?: string
+  id?: string
+  name?: string
+  archivedAt?: string | null
+  piiStripped?: boolean
+  legalHold?: boolean
+}
+
 type PersonSummary = {
   _id?: string
   id?: string
@@ -83,6 +92,7 @@ export default function NewPersonPage() {
   const router = useRouter()
 
   const [user, setUser] = useState<SessionUser | null>(null)
+  const [org, setOrg] = useState<Organization | null>(null)
   const [orgLocations, setOrgLocations] = useState<Office[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [companyLocations, setCompanyLocations] = useState<CompanyLocation[]>([])
@@ -94,6 +104,10 @@ export default function NewPersonPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const canManage = useMemo(() => hasAnyRole(user, ['admin']), [user])
+  const orgLegalHold = !!org?.legalHold
+  const orgArchived = !!org?.archivedAt
+  const orgPiiStripped = !!org?.piiStripped
+  const orgBlocked = orgLegalHold || orgArchived
 
   const [personType, setPersonType] = useState<UiPersonType>('external')
   const [displayName, setDisplayName] = useState('')
@@ -181,8 +195,13 @@ export default function NewPersonPage() {
         const me = await apiFetch<{ user?: SessionUser }>('/auth/me')
         const currentUser = me?.user || null
         setUser(currentUser)
+        setOrg(null)
         if (!currentUser?.id) {
           setError('You need to sign in to create people records.')
+          return
+        }
+        if (!currentUser?.orgId) {
+          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
           return
         }
         if (!hasAnyRole(currentUser, ['admin'])) {
@@ -194,11 +213,13 @@ export default function NewPersonPage() {
           apiFetch<Office[]>('/org-locations'),
           apiFetch<Company[]>('/companies'),
           apiFetch<PersonSummary[]>('/persons?personType=internal_staff'),
+          apiFetch<Organization>(`/organizations/${currentUser.orgId}`),
         ])
 
         const officesRes = results[0]
         const companiesRes = results[1]
         const staffRes = results[2]
+        const orgRes = results[3]
 
         if (officesRes.status === 'fulfilled') {
           setOrgLocations(Array.isArray(officesRes.value) ? officesRes.value : [])
@@ -208,6 +229,12 @@ export default function NewPersonPage() {
         }
         if (staffRes.status === 'fulfilled') {
           setStaffPeople(Array.isArray(staffRes.value) ? staffRes.value : [])
+        }
+        if (orgRes.status === 'fulfilled') {
+          setOrg(orgRes.value)
+        } else {
+          const err = orgRes.reason
+          setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load organization.'))
         }
       } catch (err: any) {
         setError(err instanceof ApiError ? err.message : 'Unable to load workspace context.')
@@ -256,8 +283,9 @@ export default function NewPersonPage() {
   const canSubmit = useMemo(() => {
     if (!canManage) return false
     if (submitting) return false
+    if (orgBlocked) return false
     return displayName.trim() !== ''
-  }, [canManage, displayName, submitting])
+  }, [canManage, displayName, submitting, orgBlocked])
 
   const buildPayload = () => {
     const normalizedRating = ratingText.trim() === '' ? undefined : Number(ratingText)
@@ -341,6 +369,15 @@ export default function NewPersonPage() {
         {loading && <div className="feedback subtle">Loading.</div>}
         {error && <div className={cn('feedback error')}>{error}</div>}
         {success && <div className={cn('feedback success')}>{success}</div>}
+        {orgLegalHold && (
+          <div className="feedback subtle">
+            Legal hold is enabled for this organization. People creation is blocked until the hold is lifted.
+          </div>
+        )}
+        {orgArchived && <div className="feedback subtle">This organization is archived. People creation is blocked.</div>}
+        {orgPiiStripped && (
+          <div className="feedback subtle">PII stripped is enabled for this organization. Some fields may be redacted.</div>
+        )}
       </div>
 
       {canManage && (

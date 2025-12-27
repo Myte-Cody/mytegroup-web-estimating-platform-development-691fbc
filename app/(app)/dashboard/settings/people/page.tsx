@@ -98,6 +98,15 @@ type OrgLocation = {
   archivedAt?: string | null
 }
 
+type Organization = {
+  _id?: string
+  id?: string
+  name?: string
+  archivedAt?: string | null
+  piiStripped?: boolean
+  legalHold?: boolean
+}
+
 type ListResponse<T> = {
   data: T[]
   total: number
@@ -124,6 +133,14 @@ const TAB_LABELS: Record<PeopleTab, string> = {
   external: 'External',
 }
 
+const EXTERNAL_TYPE_LABELS: Record<string, string> = {
+  supplier: 'Supplier',
+  subcontractor: 'Subcontractor',
+  client: 'Client',
+  partner: 'Partner',
+  misc: 'Misc',
+}
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return '-'
   const date = new Date(value)
@@ -141,8 +158,37 @@ const getPrimaryPhone = (person: Person) => {
   return primary || person.primaryPhoneE164 || ''
 }
 
+const resolveExternalType = (person: Person) => {
+  const tags = Array.isArray(person.tagKeys) ? person.tagKeys : []
+  for (const raw of tags) {
+    const key = String(raw || '').toLowerCase()
+    if (EXTERNAL_TYPE_LABELS[key]) return EXTERNAL_TYPE_LABELS[key]
+  }
+  return '-'
+}
+
+const renderCompliance = (record: { legalHold?: boolean; piiStripped?: boolean }) => {
+  const chips: Array<{ label: string; tone?: 'danger' | 'muted' }> = []
+  if (record.legalHold) chips.push({ label: 'Legal hold', tone: 'danger' })
+  if (record.piiStripped) chips.push({ label: 'PII stripped', tone: 'muted' })
+  if (!chips.length) return '-'
+  return (
+    <div className="flex flex-wrap gap-2">
+      {chips.map((chip) => (
+        <span
+          key={chip.label}
+          className={cn('pill text-xs', chip.tone === 'danger' ? 'text-[color:var(--danger)]' : 'muted')}
+        >
+          {chip.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 export default function PeoplePage() {
   const [user, setUser] = useState<SessionUser | null>(null)
+  const [org, setOrg] = useState<Organization | null>(null)
   const [tab, setTab] = useState<PeopleTab>('staff')
   const [includeArchived, setIncludeArchived] = useState(false)
   const [search, setSearch] = useState('')
@@ -173,6 +219,10 @@ export default function PeoplePage() {
 
   const canView = useMemo(() => hasAnyRole(user, ['admin']), [user])
   const canViewArchived = canView
+  const orgLegalHold = !!org?.legalHold
+  const orgArchived = !!org?.archivedAt
+  const orgPiiStripped = !!org?.piiStripped
+  const orgBlocked = orgLegalHold || orgArchived
 
   useEffect(() => {
     const load = async () => {
@@ -182,6 +232,7 @@ export default function PeoplePage() {
         const me = await apiFetch<{ user?: SessionUser }>('/auth/me')
         const currentUser = me?.user || null
         setUser(currentUser)
+        setOrg(null)
         setUsers([])
         setStaffPeople([])
         setStaffPeopleTotal(0)
@@ -197,15 +248,22 @@ export default function PeoplePage() {
           return
         }
 
+        if (!currentUser?.orgId) {
+          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
+          return
+        }
+
         if (!hasAnyRole(currentUser, ['admin'])) {
           setError('Org admin access required to view the People directory.')
           return
         }
 
-        const [inviteRes, orgLocationsRes] = await Promise.allSettled([
+        const baseFetches: Array<Promise<any>> = [
           apiFetch<Invite[]>('/invites'),
           apiFetch<OrgLocation[]>('/org-locations?includeArchived=1'),
-        ])
+          apiFetch<Organization>(`/organizations/${currentUser.orgId}`),
+        ]
+        const [inviteRes, orgLocationsRes, orgRes] = await Promise.allSettled(baseFetches)
 
         if (inviteRes.status === 'fulfilled') {
           setInvites(Array.isArray(inviteRes.value) ? inviteRes.value : [])
@@ -213,6 +271,13 @@ export default function PeoplePage() {
 
         if (orgLocationsRes.status === 'fulfilled') {
           setOrgLocations(Array.isArray(orgLocationsRes.value) ? orgLocationsRes.value : [])
+        }
+
+        if (orgRes.status === 'fulfilled') {
+          setOrg(orgRes.value)
+        } else {
+          const err = orgRes.reason
+          setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load organization.'))
         }
 
         if (tab === 'staff') {
@@ -476,6 +541,7 @@ export default function PeoplePage() {
   const activeAdvancedFilterCount = useMemo(() => {
     return [tagFilter, skillFilter, companyFilter, companyLocationFilter, orgLocationFilter].filter((value) => value.trim()).length
   }, [tagFilter, skillFilter, companyFilter, companyLocationFilter, orgLocationFilter])
+  const actionDisabled = orgBlocked || !canView
 
   return (
     <section className="space-y-6">
@@ -491,19 +557,31 @@ export default function PeoplePage() {
             <button type="button" className="btn secondary" onClick={refresh} disabled={loading}>
               {loading ? 'Loading…' : 'Refresh'}
             </button>
-            <Link href={createHref} className="btn secondary">
+            <Link href={createHref} className={cn('btn secondary', actionDisabled && 'pointer-events-none opacity-50')}>
               {createLabel}
             </Link>
-            <Link href="/dashboard/settings/people/import" className="btn primary">
+            <Link
+              href="/dashboard/settings/people/import"
+              className={cn('btn primary', actionDisabled && 'pointer-events-none opacity-50')}
+            >
               Import
             </Link>
-            <Link href="/dashboard/invites" className="btn secondary">
+            <Link href="/dashboard/invites" className={cn('btn secondary', actionDisabled && 'pointer-events-none opacity-50')}>
               Invites
             </Link>
           </div>
         </div>
 
         {error && <div className={cn('feedback error')}>{error}</div>}
+        {orgLegalHold && (
+          <div className="feedback subtle">
+            Legal hold is enabled for this organization. People updates and invites are blocked until the hold is lifted.
+          </div>
+        )}
+        {orgArchived && <div className="feedback subtle">This organization is archived. People updates are blocked.</div>}
+        {orgPiiStripped && (
+          <div className="feedback subtle">PII stripped is enabled for this organization. Some fields may be redacted.</div>
+        )}
 
         {canView && (
           <>
@@ -723,6 +801,7 @@ export default function PeoplePage() {
                       <th>Primary Phone</th>
                       <th>Invite</th>
                       <th>Status</th>
+                      <th>Compliance</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -747,6 +826,7 @@ export default function PeoplePage() {
                           <td>{getPrimaryPhone(row) || '-'}</td>
                           <td>{invite ? invite.status : '-'}</td>
                           <td>{archived ? `Archived (${formatDateTime(row.archivedAt)})` : 'Active'}</td>
+                          <td>{renderCompliance(row)}</td>
                         </tr>
                       )
                     })}
@@ -778,10 +858,12 @@ export default function PeoplePage() {
                     <th>Primary Email</th>
                     <th>Primary Phone</th>
                     {tab === 'external' && <th>Company</th>}
+                    {tab === 'external' && <th>External type</th>}
                     {tab === 'ironworkers' && <th>Ironworker #</th>}
                     <th>Rating</th>
                     <th>Invite</th>
                     <th>Status</th>
+                    <th>Compliance</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -821,10 +903,12 @@ export default function PeoplePage() {
                             )}
                           </td>
                         )}
+                        {tab === 'external' && <td>{resolveExternalType(row)}</td>}
                         {tab === 'ironworkers' && <td>{row.ironworkerNumber || '-'}</td>}
                         <td>{typeof row.rating === 'number' ? row.rating : '-'}</td>
                         <td>{invite ? invite.status : '-'}</td>
                         <td>{archived ? `Archived (${formatDateTime(row.archivedAt)})` : 'Active'}</td>
+                        <td>{renderCompliance(row)}</td>
                       </tr>
                     )
                   })}

@@ -42,8 +42,18 @@ type Invite = {
   acceptedAt?: string | null
 }
 
+type Organization = {
+  _id?: string
+  id?: string
+  name?: string
+  archivedAt?: string | null
+  piiStripped?: boolean
+  legalHold?: boolean
+}
+
 export default function SeatsPage() {
   const [user, setUser] = useState<SessionUser | null>(null)
+  const [org, setOrg] = useState<Organization | null>(null)
   const [summary, setSummary] = useState<SeatSummary | null>(null)
   const [seats, setSeats] = useState<Seat[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
@@ -54,6 +64,9 @@ export default function SeatsPage() {
   const refresh = () => setReloadAt(Date.now())
 
   const canView = useMemo(() => hasAnyRole(user, ['admin']), [user])
+  const orgLegalHold = !!org?.legalHold
+  const orgArchived = !!org?.archivedAt
+  const orgPiiStripped = !!org?.piiStripped
 
   useEffect(() => {
     const load = async () => {
@@ -66,8 +79,13 @@ export default function SeatsPage() {
         const me = await apiFetch<{ user?: SessionUser }>('/auth/me')
         const currentUser = me?.user || null
         setUser(currentUser)
+        setOrg(null)
         if (!currentUser?.id) {
           setError('You need to sign in to view seats.')
+          return
+        }
+        if (!currentUser?.orgId) {
+          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
           return
         }
         if (!hasAnyRole(currentUser, ['admin'])) {
@@ -79,11 +97,13 @@ export default function SeatsPage() {
           apiFetch<SeatSummary>('/seats/summary'),
           apiFetch<Seat[]>('/seats'),
           apiFetch<Invite[]>('/invites'),
+          apiFetch<Organization>(`/organizations/${currentUser.orgId}`),
         ])
 
         const summaryRes = results[0]
         const seatsRes = results[1]
         const invitesRes = results[2]
+        const orgRes = results[3]
 
         if (summaryRes.status === 'fulfilled') {
           setSummary(summaryRes.value)
@@ -104,6 +124,13 @@ export default function SeatsPage() {
         } else {
           const err = invitesRes.reason
           setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load invites.'))
+        }
+
+        if (orgRes.status === 'fulfilled') {
+          setOrg(orgRes.value)
+        } else {
+          const err = orgRes.reason
+          setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load organization.'))
         }
       } catch (err: any) {
         setError(err instanceof ApiError ? err.message : 'Unable to load seats.')
@@ -135,6 +162,15 @@ export default function SeatsPage() {
         </div>
 
         {error && <div className={cn('feedback error')}>{error}</div>}
+        {orgLegalHold && (
+          <div className="feedback subtle">
+            Legal hold is enabled for this organization. Seat updates are blocked until the hold is lifted.
+          </div>
+        )}
+        {orgArchived && <div className="feedback subtle">This organization is archived. Seat updates are blocked.</div>}
+        {orgPiiStripped && (
+          <div className="feedback subtle">PII stripped is enabled for this organization. Some fields may be redacted.</div>
+        )}
       </div>
 
       {canView && summary && (
@@ -198,4 +234,3 @@ export default function SeatsPage() {
     </section>
   )
 }
-

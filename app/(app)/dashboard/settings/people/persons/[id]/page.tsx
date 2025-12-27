@@ -23,6 +23,15 @@ type Office = {
   archivedAt?: string | null
 }
 
+type Organization = {
+  _id?: string
+  id?: string
+  name?: string
+  archivedAt?: string | null
+  piiStripped?: boolean
+  legalHold?: boolean
+}
+
 type PersonCertification = {
   name: string
   issuedAt?: string | null
@@ -195,6 +204,7 @@ export default function PersonDetailsPage() {
   const id = String((params as any)?.id || '')
 
   const [user, setUser] = useState<SessionUser | null>(null)
+  const [org, setOrg] = useState<Organization | null>(null)
   const [person, setPerson] = useState<Person | null>(null)
   const [orgLocations, setOrgLocations] = useState<Office[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
@@ -312,8 +322,13 @@ export default function PersonDetailsPage() {
       const me = await apiFetch<{ user?: SessionUser }>('/auth/me')
       const currentUser = me?.user || null
       setUser(currentUser)
+      setOrg(null)
       if (!currentUser?.id) {
         setError('You need to sign in to view people.')
+        return
+      }
+      if (!currentUser?.orgId) {
+        setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
         return
       }
       if (!hasAnyRole(currentUser, ['admin'])) {
@@ -327,6 +342,7 @@ export default function PersonDetailsPage() {
         apiFetch<Company[]>('/companies?includeArchived=1'),
         apiFetch<PersonSummary[]>('/persons?personType=internal_staff&includeArchived=1'),
         apiFetch<Invite[]>('/invites'),
+        apiFetch<Organization>(`/organizations/${currentUser.orgId}`),
       ])
 
       const personRes = results[0]
@@ -334,6 +350,7 @@ export default function PersonDetailsPage() {
       const companiesRes = results[2]
       const staffRes = results[3]
       const invitesRes = results[4]
+      const orgRes = results[5]
 
       if (orgLocationsRes.status === 'fulfilled') {
         setOrgLocations(Array.isArray(orgLocationsRes.value) ? orgLocationsRes.value : [])
@@ -349,6 +366,13 @@ export default function PersonDetailsPage() {
 
       if (invitesRes.status === 'fulfilled') {
         setInvites(Array.isArray(invitesRes.value) ? invitesRes.value : [])
+      }
+
+      if (orgRes.status === 'fulfilled') {
+        setOrg(orgRes.value)
+      } else {
+        const err = orgRes.reason
+        setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load organization.'))
       }
 
       if (personRes.status === 'fulfilled') {
@@ -530,6 +554,11 @@ export default function PersonDetailsPage() {
     return match?.name || person.orgLocationId
   }, [person?.orgLocationId, orgLocations])
 
+  const orgLegalHold = !!org?.legalHold
+  const orgArchived = !!org?.archivedAt
+  const orgPiiStripped = !!org?.piiStripped
+  const orgBlocked = orgLegalHold || orgArchived
+
   const isArchived = !!person?.archivedAt
   const isLegalHold = !!person?.legalHold
 
@@ -537,10 +566,11 @@ export default function PersonDetailsPage() {
     if (!canManage) return false
     if (saving) return false
     if (!person) return false
+    if (orgBlocked) return false
     if (isArchived) return false
     if (isLegalHold) return false
     return displayName.trim() !== ''
-  }, [canManage, saving, person, isArchived, isLegalHold, displayName])
+  }, [canManage, saving, person, orgBlocked, isArchived, isLegalHold, displayName])
 
   const buildPayload = () => {
     const normalizedRating = ratingText.trim() === '' ? undefined : Number(ratingText)
@@ -657,6 +687,7 @@ export default function PersonDetailsPage() {
     if (!canManage) return false
     if (!person) return false
     if (!primaryEmailValue) return false
+    if (orgBlocked) return false
     if (isArchived) return false
     if (isLegalHold) return false
     if (person.userId) return false
@@ -664,7 +695,7 @@ export default function PersonDetailsPage() {
     if (person.personType === 'external_person') return false
     if (person.personType === 'internal_union' && inviteRole === 'foreman' && !person.ironworkerNumber) return false
     return !inviting
-  }, [canManage, person, primaryEmailValue, isArchived, isLegalHold, inviteForPerson?.status, inviteRole, inviting])
+  }, [canManage, person, primaryEmailValue, orgBlocked, isArchived, isLegalHold, inviteForPerson?.status, inviteRole, inviting])
 
   const onInvite = async () => {
     if (!canInvite) return
@@ -692,10 +723,11 @@ export default function PersonDetailsPage() {
   const canEditReports = useMemo(() => {
     if (!canManage) return false
     if (!person) return false
+    if (orgBlocked) return false
     if (isArchived) return false
     if (isLegalHold) return false
     return true
-  }, [canManage, person, isArchived, isLegalHold])
+  }, [canManage, person, orgBlocked, isArchived, isLegalHold])
 
   const refreshReports = () => setReportsReloadAt(Date.now())
 
@@ -780,7 +812,7 @@ export default function PersonDetailsPage() {
                 type="button"
                 className="btn secondary"
                 onClick={onArchiveToggle}
-                disabled={!canManage || loading || saving || inviting || isLegalHold}
+                disabled={!canManage || loading || saving || inviting || isLegalHold || orgBlocked}
               >
                 {isArchived ? 'Restore' : 'Archive'}
               </button>
@@ -791,6 +823,15 @@ export default function PersonDetailsPage() {
         {loading && <div className="feedback subtle">Loading.</div>}
         {error && <div className={cn('feedback error')}>{error}</div>}
         {success && <div className={cn('feedback success')}>{success}</div>}
+        {orgLegalHold && (
+          <div className="feedback subtle">
+            Legal hold is enabled for this organization. People edits and invites are blocked until the hold is lifted.
+          </div>
+        )}
+        {orgArchived && <div className="feedback subtle">This organization is archived. People edits are blocked.</div>}
+        {orgPiiStripped && (
+          <div className="feedback subtle">PII stripped is enabled for this organization. Some fields may be redacted.</div>
+        )}
 
         {person && (
           <div className="info-grid">
@@ -801,6 +842,10 @@ export default function PersonDetailsPage() {
             <div className="info-block">
               <div className="muted">Legal hold</div>
               <div className="stat-value">{isLegalHold ? 'Yes' : 'No'}</div>
+            </div>
+            <div className="info-block">
+              <div className="muted">PII stripped</div>
+              <div className="stat-value">{person.piiStripped ? 'Yes' : 'No'}</div>
             </div>
             <div className="info-block">
               <div className="muted">Invite</div>
