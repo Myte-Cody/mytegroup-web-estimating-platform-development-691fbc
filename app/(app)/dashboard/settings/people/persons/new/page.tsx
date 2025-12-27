@@ -61,6 +61,16 @@ const DEFAULT_CERT_ROW: CertificationFormRow = {
   notes: '',
 }
 
+const EXTERNAL_TYPE_OPTIONS = [
+  { value: 'supplier', label: 'Supplier' },
+  { value: 'subcontractor', label: 'Subcontractor' },
+  { value: 'client', label: 'Client' },
+  { value: 'partner', label: 'Partner' },
+  { value: 'misc', label: 'Misc' },
+]
+
+const EXTERNAL_TYPE_VALUES = EXTERNAL_TYPE_OPTIONS.map((opt) => opt.value)
+
 type UiPersonType = 'staff' | 'ironworker' | 'external'
 
 const toBackendPersonType = (value: UiPersonType) => {
@@ -131,6 +141,16 @@ export default function NewPersonPage() {
 
   const emails = useMemo(() => splitList(emailsText).map((e) => e.toLowerCase()), [emailsText])
   const phones = useMemo(() => splitList(phonesText), [phonesText])
+  const externalType = useMemo(() => {
+    const tags = splitList(tagsText)
+    return EXTERNAL_TYPE_VALUES.find((value) => tags.some((tag) => tag.toLowerCase() === value)) || ''
+  }, [tagsText])
+
+  const updateExternalType = (next: string) => {
+    const tags = splitList(tagsText).filter((tag) => !EXTERNAL_TYPE_VALUES.includes(tag.toLowerCase()))
+    if (next) tags.unshift(next)
+    setTagsText(joinList(tags))
+  }
 
   useEffect(() => {
     if (!emails.length) {
@@ -520,6 +540,19 @@ export default function NewPersonPage() {
                       )
                     })}
                   </select>
+                </label>
+
+                <label>
+                  External type
+                  <select value={externalType} onChange={(e) => updateExternalType(e.target.value)}>
+                    <option value="">(none)</option>
+                    {EXTERNAL_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="muted">Optional tag for suppliers, subcontractors, clients, and partners.</div>
                 </label>
               </>
             )}

@@ -337,11 +337,6 @@ export default function DashboardPage() {
             <button className="btn secondary" type="button" onClick={refresh} disabled={loading}>
               {loading ? 'Loading.' : 'Refresh'}
             </button>
-            {primaryRole === 'platform_admin' || primaryRole === 'superadmin' ? (
-              <Link href="/platform" className="btn primary">
-                Platform portal
-              </Link>
-            ) : null}
           </div>
         </div>
 
@@ -356,9 +351,7 @@ export default function DashboardPage() {
             </p>
 
             {orgChoices.length === 0 ? (
-              <div className="muted">
-                No organizations found. Create one in the <Link href="/platform">Platform portal</Link>.
-              </div>
+              <div className="muted">No organizations found. Create one in the Platform Admin view.</div>
             ) : (
               <div className="grid gap-2 md:grid-cols-2">
                 {orgChoices.map((choice) => {

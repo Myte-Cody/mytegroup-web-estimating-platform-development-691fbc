@@ -270,7 +270,7 @@ export default function InvitesPage() {
                   className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  disabled={submitting || !selectedPerson}
+                  disabled={submitting || !selectedPerson || inviteRoleOptions.length === 0}
                 >
                   {inviteRoleOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
