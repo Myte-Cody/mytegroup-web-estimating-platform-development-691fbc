@@ -283,8 +283,9 @@ export default function ProjectsPage() {
   const updateBudgetField = (field: keyof ProjectBudget, value: number | string | null) => {
     setEditProject((prev) => {
       if (!prev) return prev
-      const next = { ...(prev.budget || {}) }
-      next[field] = typeof value === 'string' ? (value ? value : null) : value
+      const next: ProjectBudget = { ...(prev.budget || {}) }
+      ;(next as Record<string, number | string | null | undefined>)[field] =
+        typeof value === 'string' ? (value ? value : null) : value
       return { ...prev, budget: next }
     })
   }
@@ -897,7 +898,7 @@ export default function ProjectsPage() {
                     <textarea
                       name="description"
                       rows={3}
-                      placeholder="Short scope / notes…"
+                      placeholder="Short scope / notes..."
                       className="w-full resize-y rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -1368,7 +1369,7 @@ export default function ProjectsPage() {
                   />
                 </label>
                 <label className="space-y-1 text-sm">
-                  <span className="font-semibold">Glulam volume (m³)</span>
+                  <span className="font-semibold">Glulam volume (m3)</span>
                   <input
                     type="number"
                     value={editProject?.quantities?.glulam?.volumeM3 ?? ''}
@@ -1487,7 +1488,7 @@ export default function ProjectsPage() {
                     <tbody>
                       {editProject.costCodeBudgets.map((row, idx) => {
                         const code = costCodeById.get(row.costCodeId)
-                        const label = code ? `${code.category} • ${code.code} — ${code.description}` : row.costCodeId
+                        const label = code ? `${code.category} - ${code.code} - ${code.description}` : row.costCodeId
                         return (
                           <tr key={`${row.costCodeId}-${idx}`}>
                             <td className="text-sm">{label || '-'}</td>
@@ -1524,13 +1525,13 @@ export default function ProjectsPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <select value={newCostCodeId} onChange={(e) => setNewCostCodeId(e.target.value)} disabled={detailDisabled}>
-                  <option value="">Add cost code…</option>
+                  <option value="">Add cost code...</option>
                   {costCodeOptions.map((code) => {
                     const id = code.id || code._id
                     if (!id) return null
                     return (
                       <option key={id} value={id}>
-                        {code.category} • {code.code} — {code.description}
+                        {code.category} - {code.code} - {code.description}
                       </option>
                     )
                   })}
@@ -1605,6 +1606,8 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
+    </section>
 
   )
 }
+

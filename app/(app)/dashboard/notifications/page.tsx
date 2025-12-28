@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-import { ApiError, apiFetch } from '../../lib/api'
-import { cn } from '../../lib/utils'
+import { ApiError, apiFetch } from '../../../lib/api'
+import { cn } from '../../../lib/utils'
 
 type Notification = {
   _id?: string

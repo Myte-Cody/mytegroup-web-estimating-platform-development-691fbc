@@ -209,6 +209,17 @@ export default function CostCodesPage() {
     window.localStorage.removeItem(importStorageKey)
   }, [importStorageKey])
 
+  const resetImportState = useCallback(() => {
+    setImportJobId(null)
+    setImportStatus(null)
+    setImportFile(null)
+    setImportPreview([])
+    setImportSummary(null)
+    setImportStep('upload')
+    setImportResumed(false)
+    clearPersistedImportJob()
+  }, [clearPersistedImportJob])
+
   useEffect(() => {
     const load = async () => {
       setLoading(true)
@@ -732,17 +743,6 @@ export default function CostCodesPage() {
       setImporting(false)
     }
   }
-
-  const resetImportState = useCallback(() => {
-    setImportJobId(null)
-    setImportStatus(null)
-    setImportFile(null)
-    setImportPreview([])
-    setImportSummary(null)
-    setImportStep('upload')
-    setImportResumed(false)
-    clearPersistedImportJob()
-  }, [clearPersistedImportJob])
 
   const closeImportModal = () => {
     setShowImportModal(false)
