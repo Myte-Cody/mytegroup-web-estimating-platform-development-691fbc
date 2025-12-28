@@ -19,6 +19,8 @@ type Seat = {
   seatNumber: number
   status: 'vacant' | 'active'
   userId?: string
+  role?: string | null
+  projectId?: string | null
   activatedAt?: string | null
   createdAt?: string
   updatedAt?: string
@@ -42,6 +44,22 @@ type Invite = {
   acceptedAt?: string | null
 }
 
+type UserRecord = {
+  _id?: string
+  id?: string
+  email?: string
+  role?: string
+  roles?: string[]
+  archivedAt?: string | null
+}
+
+type Project = {
+  _id?: string
+  id?: string
+  name: string
+  archivedAt?: string | null
+}
+
 type Organization = {
   _id?: string
   id?: string
@@ -51,12 +69,26 @@ type Organization = {
   legalHold?: boolean
 }
 
+const formatDateTime = (value?: string | null) => {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString()
+}
+
+const formatRole = (value?: string | null) => {
+  if (!value) return '-'
+  return String(value).replace(/_/g, ' ')
+}
+
 export default function SeatsPage() {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [org, setOrg] = useState<Organization | null>(null)
   const [summary, setSummary] = useState<SeatSummary | null>(null)
   const [seats, setSeats] = useState<Seat[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
+  const [users, setUsers] = useState<UserRecord[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,6 +107,8 @@ export default function SeatsPage() {
       setSummary(null)
       setSeats([])
       setInvites([])
+      setUsers([])
+      setProjects([])
       try {
         const me = await apiFetch<{ user?: SessionUser }>('/auth/me')
         const currentUser = me?.user || null
@@ -85,7 +119,7 @@ export default function SeatsPage() {
           return
         }
         if (!currentUser?.orgId) {
-          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
+          setError('Your session is missing an organization scope. Ask Platform Ops to assign you to an org.')
           return
         }
         if (!hasAnyRole(currentUser, ['admin'])) {
@@ -98,12 +132,16 @@ export default function SeatsPage() {
           apiFetch<Seat[]>('/seats'),
           apiFetch<Invite[]>('/invites'),
           apiFetch<Organization>(`/organizations/${currentUser.orgId}`),
+          apiFetch<Project[]>('/projects?includeArchived=1'),
+          apiFetch<UserRecord[]>('/users?includeArchived=1'),
         ])
 
         const summaryRes = results[0]
         const seatsRes = results[1]
         const invitesRes = results[2]
         const orgRes = results[3]
+        const projectsRes = results[4]
+        const usersRes = results[5]
 
         if (summaryRes.status === 'fulfilled') {
           setSummary(summaryRes.value)
@@ -132,6 +170,14 @@ export default function SeatsPage() {
           const err = orgRes.reason
           setError((prev) => prev || (err instanceof ApiError ? err.message : 'Unable to load organization.'))
         }
+
+        if (projectsRes.status === 'fulfilled') {
+          setProjects(Array.isArray(projectsRes.value) ? projectsRes.value : [])
+        }
+
+        if (usersRes.status === 'fulfilled') {
+          setUsers(Array.isArray(usersRes.value) ? usersRes.value : [])
+        }
       } catch (err: any) {
         setError(err instanceof ApiError ? err.message : 'Unable to load seats.')
       } finally {
@@ -143,6 +189,24 @@ export default function SeatsPage() {
   }, [reloadAt])
 
   const pendingInvites = useMemo(() => invites.filter((i) => i.status === 'pending').length, [invites])
+
+  const projectById = useMemo(() => {
+    const map = new Map<string, Project>()
+    projects.forEach((project) => {
+      const id = project.id || project._id
+      if (id) map.set(id, project)
+    })
+    return map
+  }, [projects])
+
+  const userById = useMemo(() => {
+    const map = new Map<string, UserRecord>()
+    users.forEach((record) => {
+      const id = record.id || record._id
+      if (id) map.set(id, record)
+    })
+    return map
+  }, [users])
 
   return (
     <section className="space-y-6">
@@ -213,18 +277,26 @@ export default function SeatsPage() {
                     <th>#</th>
                     <th>Status</th>
                     <th>User</th>
+                    <th>Role</th>
+                    <th>Project</th>
                     <th>Activated</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {seats.map((seat) => (
-                    <tr key={seat._id || `${seat.orgId}-${seat.seatNumber}`}>
-                      <td>{seat.seatNumber}</td>
-                      <td>{seat.status}</td>
-                      <td className="muted">{seat.userId || '-'}</td>
-                      <td className="muted">{seat.activatedAt || '-'}</td>
-                    </tr>
-                  ))}
+                  {seats.map((seat) => {
+                    const userLabel = seat.userId ? userById.get(seat.userId)?.email || seat.userId : '-'
+                    const projectLabel = seat.projectId ? projectById.get(seat.projectId)?.name || seat.projectId : '-'
+                    return (
+                      <tr key={seat._id || `${seat.orgId}-${seat.seatNumber}`}>
+                        <td>{seat.seatNumber}</td>
+                        <td>{seat.status}</td>
+                        <td className="muted">{userLabel}</td>
+                        <td className="muted">{formatRole(seat.role)}</td>
+                        <td className="muted">{projectLabel}</td>
+                        <td className="muted">{formatDateTime(seat.activatedAt)}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

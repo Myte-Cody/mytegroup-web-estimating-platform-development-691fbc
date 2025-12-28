@@ -69,7 +69,7 @@ export default function WaitlistAdminPage() {
         const currentRole = me?.user?.role || null
         setRole(currentRole)
         if (!currentRole || !PLATFORM_ROLES.includes(currentRole)) {
-          setError('Platform admin access required.')
+          setError('Platform Ops access required.')
           setEntries([])
           setTotal(0)
           return
@@ -145,7 +145,7 @@ export default function WaitlistAdminPage() {
   return (
     <section className="dashboard-grid">
       <section className="glass-card">
-        <div className="badge">Waitlist admin</div>
+        <div className="badge">Waitlist Ops</div>
         <h1>Waitlist cohorts</h1>
         <p className="subtitle">
           Review pending, invited, and activated waitlist entries. Use this view to confirm the lifecycle and cohorts

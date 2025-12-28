@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { cn } from '../lib/utils'
+import { useLanguage } from '../lib/i18n'
 
 const THEME_KEY = 'myte-theme'
 
@@ -25,6 +26,7 @@ function applyTheme(theme: Theme) {
 
 export default function ThemeToggle({ floating = true, className }: ThemeToggleProps) {
   const [theme, setTheme] = useState<Theme>('dark')
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -51,7 +53,8 @@ export default function ThemeToggle({ floating = true, className }: ThemeToggleP
       onClick={toggle}
       aria-label="Toggle light and dark mode"
     >
-      <span className="theme-toggle-inner">{theme === 'dark' ? '?' : ''}</span>
+      <span className={cn('theme-toggle-chip', theme === 'light' && 'active')}>{t('theme.light')}</span>
+      <span className={cn('theme-toggle-chip', theme === 'dark' && 'active')}>{t('theme.dark')}</span>
     </button>
   )
 }

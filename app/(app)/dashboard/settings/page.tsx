@@ -66,8 +66,8 @@ export default function SettingsHubPage() {
     },
     {
       title: 'Cost Codes',
-      description: 'Org-level cost codes used for timesheets (coming soon).',
-      disabled: true,
+      description: 'Org-level cost codes used for timesheets and estimating.',
+      href: '/dashboard/settings/cost-codes',
     },
     {
       title: 'Companies',

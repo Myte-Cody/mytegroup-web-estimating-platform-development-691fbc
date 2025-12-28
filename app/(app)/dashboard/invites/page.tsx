@@ -47,7 +47,7 @@ type Person = {
 }
 
 const ROLE_OPTIONS = [
-  { value: 'org_owner', label: 'Org Owner (full suite)' },
+  { value: 'org_owner', label: 'Org Admin (Owner)' },
   { value: 'org_admin', label: 'Org Admin' },
   { value: 'admin', label: 'Admin' },
   { value: 'manager', label: 'Manager' },
@@ -114,7 +114,7 @@ export default function InvitesPage() {
           return
         }
         if (!currentUser?.orgId) {
-          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
+          setError('Your session is missing an organization scope. Ask Platform Ops to assign you to an org.')
           setInvites([])
           return
         }

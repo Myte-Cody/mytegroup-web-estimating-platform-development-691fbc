@@ -23,7 +23,7 @@ type UserRecord = {
 const ALLOWED_ROLES = ['org_owner', 'org_admin', 'admin', 'superadmin', 'platform_admin']
 
 const ROLE_OPTIONS = [
-  { value: 'org_owner', label: 'Org Owner (full suite)' },
+  { value: 'org_owner', label: 'Org Admin (Owner)' },
   { value: 'org_admin', label: 'Org Admin' },
   { value: 'admin', label: 'Admin' },
   { value: 'manager', label: 'Manager' },
@@ -164,23 +164,34 @@ export default function UsersPage() {
                 const id = u.id || u._id || ''
                 const archived = !!u.archivedAt
                 const isSelf = !!currentUserId && id === currentUserId
+                const isSuperAdmin = (u.role || '').toLowerCase() === 'superadmin'
                 return (
                   <tr key={id || u.email} className={cn('border-t border-border/60')}>
                     <td className="px-4 py-2 font-medium text-[color:var(--text)]">{u.email}</td>
                     <td className="px-4 py-2 text-[color:var(--text)]">
-                      <select
-                        className="w-full max-w-[240px] rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-sm text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
-                        value={u.role || 'user'}
-                        disabled={!canManage || isSelf}
-                        onChange={(e) => handleRoleUpdate(id, e.target.value)}
-                      >
-                        {ROLE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      {isSelf && <div className="text-xs text-muted-foreground mt-1">You can’t change your own role.</div>}
+                      <div className="flex flex-col gap-2">
+                        <select
+                          className="w-full max-w-[240px] rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-sm text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
+                          value={u.role || 'user'}
+                          disabled={!canManage || isSelf}
+                          onChange={(e) => handleRoleUpdate(id, e.target.value)}
+                        >
+                          {ROLE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        {isSuperAdmin && (
+                          <span
+                            className="inline-flex w-fit items-center rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-200"
+                            title="Break-glass system role"
+                          >
+                            Break-glass
+                          </span>
+                        )}
+                        {isSelf && <div className="text-xs text-muted-foreground">You can't change your own role.</div>}
+                      </div>
                     </td>
                     <td className="px-4 py-2 text-[color:var(--text)]">{u.organizationId || '-'}</td>
                     <td className="px-4 py-2 text-[color:var(--text)]">{archived ? 'Yes' : 'No'}</td>
@@ -212,4 +223,3 @@ export default function UsersPage() {
     </section>
   )
 }
-

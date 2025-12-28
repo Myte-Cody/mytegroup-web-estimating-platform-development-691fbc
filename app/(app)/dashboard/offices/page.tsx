@@ -823,7 +823,7 @@ export default function OfficesPage() {
 
             {canViewOrgDetails && orgArchived && (
               <div className="feedback error">
-                This organization is archived. Org location changes may be restricted. Contact a platform admin if you need access restored.
+                This organization is archived. Org location changes may be restricted. Contact Platform Ops if you need access restored.
               </div>
             )}
 

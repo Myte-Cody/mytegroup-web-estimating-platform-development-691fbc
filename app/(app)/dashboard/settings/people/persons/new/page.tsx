@@ -201,7 +201,7 @@ export default function NewPersonPage() {
           return
         }
         if (!currentUser?.orgId) {
-          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
+          setError('Your session is missing an organization scope. Ask Platform Ops to assign you to an org.')
           return
         }
         if (!hasAnyRole(currentUser, ['admin'])) {

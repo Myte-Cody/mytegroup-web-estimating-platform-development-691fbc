@@ -9,7 +9,7 @@ export default function PlatformHomePage() {
     <section className="dashboard-grid">
       <section className="glass-card space-y-3">
         <div className="badge">Platform portal</div>
-        <h1>Platform Admin</h1>
+        <h1>Platform Ops</h1>
         <p className="subtitle">
           Review inbound requests (waitlist + inquiries), approve who gets access, and keep the entry pipeline tight.
         </p>
@@ -25,7 +25,7 @@ export default function PlatformHomePage() {
           </Link>
         </div>
         <p className="text-sm text-muted-foreground">
-          This portal is intended for seeded platform admins only. Organization work happens in the Workspace.
+          This portal is intended for seeded platform ops only. Organization work happens in the Workspace.
         </p>
       </section>
     </section>

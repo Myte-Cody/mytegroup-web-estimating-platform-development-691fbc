@@ -5,7 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
+import LanguageToggle from '../components/LanguageToggle'
+import ThemeToggle from '../components/ThemeToggle'
 import { ApiError, apiFetch } from '../lib/api'
+import { useLanguage } from '../lib/i18n'
 import { hasAnyRole } from '../lib/rbac'
 import { cn } from '../lib/utils'
 
@@ -19,23 +22,25 @@ type SessionUser = {
 
 type NavItem = {
   href: string
-  label: string
+  labelKey: string
   roles?: string[]
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/projects', label: 'Projects', roles: ['viewer'] },
-  { href: '/dashboard/org-locations', label: 'Org locations', roles: ['viewer'] },
-  { href: '/dashboard/settings/people', label: 'People', roles: ['admin'] },
-  { href: '/dashboard/settings', label: 'Settings', roles: ['admin'] },
-  { href: '/dashboard/users', label: 'Users', roles: ['admin'] },
-  { href: '/dashboard/invites', label: 'Invites', roles: ['admin'] },
-  { href: '/dashboard/settings/graph-edges', label: 'Graph', roles: ['admin'] },
+  { href: '/dashboard', labelKey: 'nav.dashboard' },
+  { href: '/dashboard/projects', labelKey: 'nav.projects', roles: ['viewer'] },
+  { href: '/dashboard/org-locations', labelKey: 'nav.org_locations', roles: ['viewer'] },
+  { href: '/dashboard/settings/people', labelKey: 'nav.people', roles: ['admin'] },
+  { href: '/dashboard/settings', labelKey: 'nav.settings', roles: ['admin'] },
+  { href: '/dashboard/users', labelKey: 'nav.users', roles: ['admin'] },
+  { href: '/dashboard/invites', labelKey: 'nav.invites', roles: ['admin'] },
+  { href: '/dashboard/notifications', labelKey: 'nav.notifications' },
+  { href: '/dashboard/settings/graph-edges', labelKey: 'nav.graph', roles: ['admin'] },
 ]
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [user, setUser] = useState<SessionUser | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [drawerCollapsed, setDrawerCollapsed] = useState(false)
@@ -73,13 +78,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       return hasAnyRole(user, item.roles)
     })
   }, [user])
-  const showPlatformBridge = hasAnyRole(user, ['platform_admin'])
+  const showPlatformBridge = user?.role === 'platform_admin'
 
   return (
     <div className="workspace-root">
       <div className="workspace-brand-chip" onClick={() => router.push('/dashboard')}>
         <span className="workspace-brand-logo">MYTE</span>
         <span className="workspace-brand-text">Construction OS</span>
+      </div>
+
+      <div className="workspace-utility">
+        <LanguageToggle />
+        <ThemeToggle floating={false} />
       </div>
 
       <aside
@@ -96,14 +106,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             onClick={() => setDrawerOpenMobile(false)}
             aria-label="Close navigation"
           >
-            ✕
+            {t('nav.close')}
           </button>
           <div className="workspace-org">
-            <div className="workspace-org-logo">🏗</div>
+            <div className="workspace-org-logo">MY</div>
             {!drawerCollapsed && (
               <div className="workspace-org-meta">
-                <div className="workspace-org-name">Workspace</div>
-                {user?.orgId && <div className="workspace-org-id">Org {user.orgId}</div>}
+                <div className="workspace-org-name">{t('nav.workspace')}</div>
+                {user?.orgId && <div className="workspace-org-id">{t('nav.org_id', { id: user.orgId })}</div>}
               </div>
             )}
           </div>
@@ -121,24 +131,27 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               }}
             >
               <span className="workspace-nav-dot" />
-              {!drawerCollapsed && <span>{item.label}</span>}
+              {!drawerCollapsed && <span>{t(item.labelKey)}</span>}
             </button>
           ))}
         </nav>
 
         <div className="workspace-user">
           {showPlatformBridge && (
-            <button
-              type="button"
-              className="workspace-nav-item workspace-bridge"
-              onClick={() => {
-                router.push('/platform')
-                setDrawerOpenMobile(false)
-              }}
-            >
-              <span className="workspace-nav-dot" />
-              {!drawerCollapsed && <span>Platform Admin</span>}
-            </button>
+            <>
+              <div className="workspace-divider" />
+              <button
+                type="button"
+                className="workspace-nav-item workspace-bridge"
+                onClick={() => {
+                  router.push('/platform')
+                  setDrawerOpenMobile(false)
+                }}
+              >
+                <span className="workspace-nav-dot" />
+                {!drawerCollapsed && <span>{t('nav.platform_admin')}</span>}
+              </button>
+            </>
           )}
           {user ? (
             <>
@@ -160,12 +173,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   router.replace('/auth/login')
                 }}
               >
-                {!drawerCollapsed ? 'Sign out' : '⎋'}
+                {!drawerCollapsed ? t('nav.sign_out') : 'Out'}
               </button>
             </>
           ) : (
             <Link href="/auth/login" className="workspace-signin-link">
-              Sign in
+              {t('nav.sign_in')}
             </Link>
           )}
         </div>
@@ -176,7 +189,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           onClick={() => setDrawerCollapsed((prev) => !prev)}
           aria-label={drawerCollapsed ? 'Expand navigation' : 'Collapse navigation'}
         >
-          {drawerCollapsed ? '›' : '‹'}
+          {drawerCollapsed ? '>' : '<'}
         </button>
       </aside>
 
@@ -186,7 +199,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         onClick={() => setDrawerOpenMobile(true)}
         aria-label="Open navigation"
       >
-        ☰
+        {t('nav.menu')}
       </button>
 
       <main id="main-content" className="workspace-main">

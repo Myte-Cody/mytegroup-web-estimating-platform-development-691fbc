@@ -80,7 +80,7 @@ export default function AdminInquiriesPage() {
         const allowed = currentUser?.role && ALLOWED_ROLES.has(currentUser.role)
         setAuthorized(Boolean(allowed))
         if (!allowed) {
-          setError('You need a SuperAdmin or PlatformAdmin session to view inquiries.')
+          setError('You need a SuperAdmin or Platform Ops session to view inquiries.')
         }
       } catch (err: any) {
         if (err instanceof ApiError && err.status === 401) {
@@ -112,7 +112,7 @@ export default function AdminInquiriesPage() {
         const message =
           err instanceof ApiError
             ? err.status === 401 || err.status === 403
-              ? 'You need a SuperAdmin or PlatformAdmin session to view inquiries.'
+              ? 'You need a SuperAdmin or Platform Ops session to view inquiries.'
               : err.message
             : 'Unable to load inquiries.'
         setError(message)
@@ -164,7 +164,7 @@ export default function AdminInquiriesPage() {
         <div className="badge">Admin console</div>
         <h1>Contact inquiries</h1>
         <p className="subtitle">
-          Platform-level view of inbound contact requests. Only SuperAdmin and PlatformAdmin roles can access this page.
+          Platform-level view of inbound contact requests. Only SuperAdmin and Platform Ops roles can access this page.
         </p>
 
         {user && !authorized && (

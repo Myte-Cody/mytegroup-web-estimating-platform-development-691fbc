@@ -213,9 +213,23 @@ export default function PeoplePage() {
   const [companyTypeOptions, setCompanyTypeOptions] = useState<TaxonomyValue[]>([])
   const [companyLocations, setCompanyLocations] = useState<CompanyLocation[]>([])
   const [orgLocations, setOrgLocations] = useState<OrgLocation[]>([])
+  const [companyLocationLookup, setCompanyLocationLookup] = useState<Record<string, CompanyLocation>>({})
 
   const [reloadAt, setReloadAt] = useState(0)
   const refresh = () => setReloadAt(Date.now())
+
+  const mergeCompanyLocations = (locations: CompanyLocation[]) => {
+    if (!locations.length) return
+    setCompanyLocationLookup((prev) => {
+      const next = { ...prev }
+      locations.forEach((loc) => {
+        const id = loc.id || loc._id
+        if (!id) return
+        next[id] = loc
+      })
+      return next
+    })
+  }
 
   const canView = useMemo(() => hasAnyRole(user, ['admin']), [user])
   const canViewArchived = canView
@@ -242,6 +256,7 @@ export default function PeoplePage() {
         setCompanies([])
         setCompanyLocations([])
         setOrgLocations([])
+        setCompanyLocationLookup({})
 
         if (!currentUser?.id) {
           setError('You need to sign in to manage people.')
@@ -249,7 +264,7 @@ export default function PeoplePage() {
         }
 
         if (!currentUser?.orgId) {
-          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
+          setError('Your session is missing an organization scope. Ask Platform Ops to assign you to an org.')
           return
         }
 
@@ -368,8 +383,9 @@ export default function PeoplePage() {
 
         const results = await Promise.allSettled(fetches)
         const peopleRes = results[0]
+        let rows: Person[] = []
         if (peopleRes.status === 'fulfilled') {
-          const rows = Array.isArray(peopleRes.value) ? peopleRes.value : peopleRes.value.data
+          rows = Array.isArray(peopleRes.value) ? peopleRes.value : peopleRes.value.data
           const totalCount = Array.isArray(peopleRes.value) ? rows.length : peopleRes.value.total
           setPeople(Array.isArray(rows) ? rows : [])
           setPeopleTotal(typeof totalCount === 'number' ? totalCount : 0)
@@ -383,13 +399,41 @@ export default function PeoplePage() {
 
           const locationsRes = locationsIdx !== null ? results[locationsIdx] : null
           if (locationsRes && locationsRes.status === 'fulfilled') {
-            setCompanyLocations(Array.isArray(locationsRes.value) ? locationsRes.value : [])
+            const locations = Array.isArray(locationsRes.value) ? locationsRes.value : []
+            setCompanyLocations(locations)
+            mergeCompanyLocations(locations)
           }
 
           const taxonomyRes = taxonomyIdx !== null ? results[taxonomyIdx] : null
           if (taxonomyRes && taxonomyRes.status === 'fulfilled') {
             const values = Array.isArray(taxonomyRes.value?.values) ? taxonomyRes.value.values : []
             setCompanyTypeOptions(values.filter((v: TaxonomyValue) => !v.archivedAt))
+          }
+
+          if (rows.length) {
+            const companyIds = Array.from(
+              new Set(
+                rows
+                  .map((row) => (row.companyId || '').trim())
+                  .filter(Boolean)
+              )
+            )
+            if (companyIds.length && !companyFilter.trim()) {
+              const locationFetches = companyIds.map((companyId) => {
+                const qs = new URLSearchParams()
+                qs.set('companyId', companyId)
+                if (includeArchived && canViewArchived) qs.set('includeArchived', '1')
+                return apiFetch<CompanyLocation[]>(`/company-locations?${qs.toString()}`)
+              })
+              const locationResults = await Promise.allSettled(locationFetches)
+              const merged: CompanyLocation[] = []
+              locationResults.forEach((res) => {
+                if (res.status === 'fulfilled') {
+                  merged.push(...(Array.isArray(res.value) ? res.value : []))
+                }
+              })
+              if (merged.length) mergeCompanyLocations(merged)
+            }
           }
         }
       } catch (err: any) {
@@ -512,6 +556,20 @@ export default function PeoplePage() {
     return list.map((key) => companyTypeLabelsByKey.get(key) || key.replace(/_/g, ' ')).join(', ')
   }
 
+  const resolveOrgLocationLabel = (person: Person) => {
+    const orgLocationId = (person.orgLocationId || '').trim()
+    if (!orgLocationId) return '-'
+    const match = orgLocationById.get(orgLocationId)
+    return match?.name || orgLocationId
+  }
+
+  const resolveCompanyLocationLabel = (person: Person) => {
+    const locationId = (person.companyLocationId || '').trim()
+    if (!locationId) return '-'
+    const match = companyLocationById.get(locationId)
+    return match?.name || locationId
+  }
+
   const companyOptions = useMemo(() => {
     const sorted = [...companies]
     sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
@@ -529,6 +587,26 @@ export default function PeoplePage() {
     sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
     return sorted
   }, [orgLocations])
+
+  const orgLocationById = useMemo(() => {
+    const map = new Map<string, OrgLocation>()
+    orgLocations.forEach((loc) => {
+      const id = loc.id || loc._id
+      if (!id) return
+      map.set(id, loc)
+    })
+    return map
+  }, [orgLocations])
+
+  const companyLocationById = useMemo(() => {
+    const map = new Map<string, CompanyLocation>()
+    Object.values(companyLocationLookup).forEach((loc) => {
+      const id = loc.id || loc._id
+      if (!id) return
+      map.set(id, loc)
+    })
+    return map
+  }, [companyLocationLookup])
 
   const directoryTotal = useMemo(() => {
     return tab === 'staff' ? staffPeopleTotal : peopleTotal
@@ -799,6 +877,7 @@ export default function PeoplePage() {
                       <th>Name</th>
                       <th>Primary Email</th>
                       <th>Primary Phone</th>
+                      <th>Org location</th>
                       <th>Invite</th>
                       <th>Status</th>
                       <th>Compliance</th>
@@ -824,6 +903,7 @@ export default function PeoplePage() {
                           </td>
                           <td>{getPrimaryEmail(row) || '-'}</td>
                           <td>{getPrimaryPhone(row) || '-'}</td>
+                          <td>{resolveOrgLocationLabel(row)}</td>
                           <td>{invite ? invite.status : '-'}</td>
                           <td>{archived ? `Archived (${formatDateTime(row.archivedAt)})` : 'Active'}</td>
                           <td>{renderCompliance(row)}</td>
@@ -857,7 +937,9 @@ export default function PeoplePage() {
                     <th>Name</th>
                     <th>Primary Email</th>
                     <th>Primary Phone</th>
+                    {tab === 'ironworkers' && <th>Org location</th>}
                     {tab === 'external' && <th>Company</th>}
+                    {tab === 'external' && <th>Company location</th>}
                     {tab === 'external' && <th>External type</th>}
                     {tab === 'ironworkers' && <th>Ironworker #</th>}
                     <th>Rating</th>
@@ -887,6 +969,7 @@ export default function PeoplePage() {
                         </td>
                         <td>{getPrimaryEmail(row) || '-'}</td>
                         <td>{getPrimaryPhone(row) || '-'}</td>
+                        {tab === 'ironworkers' && <td>{resolveOrgLocationLabel(row)}</td>}
                         {tab === 'external' && (
                           <td>
                             {company ? (
@@ -903,6 +986,7 @@ export default function PeoplePage() {
                             )}
                           </td>
                         )}
+                        {tab === 'external' && <td>{resolveCompanyLocationLabel(row)}</td>}
                         {tab === 'external' && <td>{resolveExternalType(row)}</td>}
                         {tab === 'ironworkers' && <td>{row.ironworkerNumber || '-'}</td>}
                         <td>{typeof row.rating === 'number' ? row.rating : '-'}</td>

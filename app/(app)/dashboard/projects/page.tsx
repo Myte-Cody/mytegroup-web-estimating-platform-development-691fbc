@@ -14,6 +14,41 @@ type SessionUser = {
   orgId?: string
 }
 
+type ProjectBudget = {
+  hours?: number | null
+  labourRate?: number | null
+  currency?: string | null
+  amount?: number | null
+}
+
+type ProjectQuantities = {
+  structural?: { tonnage?: number | null; pieces?: number | null }
+  miscMetals?: { tonnage?: number | null; pieces?: number | null }
+  metalDeck?: { pieces?: number | null; sqft?: number | null }
+  cltPanels?: { pieces?: number | null; sqft?: number | null }
+  glulam?: { volumeM3?: number | null; pieces?: number | null }
+}
+
+type ProjectStaffing = {
+  projectManagerPersonId?: string | null
+  superintendentPersonId?: string | null
+  foremanPersonIds?: string[]
+}
+
+type ProjectCostCodeBudget = {
+  costCodeId: string
+  budgetedHours?: number | null
+  costBudget?: number | null
+}
+
+type ProjectSeatAssignment = {
+  seatId: string
+  personId?: string | null
+  role?: string | null
+  assignedAt?: string | null
+  removedAt?: string | null
+}
+
 type Project = {
   _id?: string
   id?: string
@@ -21,6 +56,21 @@ type Project = {
   description?: string
   organizationId?: string
   officeId?: string | null
+  projectCode?: string | null
+  status?: string | null
+  location?: string | null
+  bidDate?: string | null
+  awardDate?: string | null
+  fabricationStartDate?: string | null
+  fabricationEndDate?: string | null
+  erectionStartDate?: string | null
+  erectionEndDate?: string | null
+  completionDate?: string | null
+  budget?: ProjectBudget | null
+  quantities?: ProjectQuantities | null
+  staffing?: ProjectStaffing | null
+  costCodeBudgets?: ProjectCostCodeBudget[]
+  seatAssignments?: ProjectSeatAssignment[]
   archivedAt?: string | null
   piiStripped?: boolean
   legalHold?: boolean
@@ -34,7 +84,7 @@ type OfflineAction =
       orgId?: string
       type: 'project.create'
       queuedAt: number
-      payload: { name: string; description?: string; officeId?: string }
+      payload: { name: string; description?: string; officeId?: string; projectCode?: string; status?: string; location?: string }
       error?: string
     }
   | {
@@ -46,11 +96,37 @@ type OfflineAction =
       error?: string
     }
 
+type ListResponse<T> = {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+}
+
 type Office = {
   _id?: string
   id?: string
   name: string
   address?: string
+  archivedAt?: string | null
+}
+
+type CostCode = {
+  _id?: string
+  id?: string
+  category: string
+  code: string
+  description: string
+  active: boolean
+  archivedAt?: string | null
+}
+
+type PersonSummary = {
+  _id?: string
+  id?: string
+  displayName: string
+  personType?: string
+  userId?: string | null
   archivedAt?: string | null
 }
 
@@ -68,6 +144,20 @@ const formatDate = (value?: string | null) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString()
+}
+
+const toDateInputValue = (value?: string | null) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toISOString().slice(0, 10)
+}
+
+const toNumberOrNull = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 const queueStorageKey = 'myte.offlineQueue.v1'
@@ -92,7 +182,15 @@ export default function ProjectsPage() {
   const [org, setOrg] = useState<Organization | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [offices, setOffices] = useState<Office[]>([])
+  const [costCodes, setCostCodes] = useState<CostCode[]>([])
+  const [staffPeople, setStaffPeople] = useState<PersonSummary[]>([])
+  const [ironworkers, setIronworkers] = useState<PersonSummary[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [editProject, setEditProject] = useState<Project | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
+  const [detailSaving, setDetailSaving] = useState(false)
+  const [newCostCodeId, setNewCostCodeId] = useState('')
   const [offlineQueue, setOfflineQueue] = useState<OfflineAction[]>([])
 
   const [includeArchived, setIncludeArchived] = useState(false)
@@ -108,6 +206,9 @@ export default function ProjectsPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [officeId, setOfficeId] = useState<string>('')
+  const [projectCode, setProjectCode] = useState('')
+  const [projectStatus, setProjectStatus] = useState('')
+  const [projectLocation, setProjectLocation] = useState('')
 
   const canViewProjects = useMemo(() => hasAnyRole(user, ['viewer']), [user])
   const canManageProjects = useMemo(() => hasAnyRole(user, ['admin', 'manager']), [user])
@@ -130,7 +231,148 @@ export default function ProjectsPage() {
     return map
   }, [offices])
 
+  const costCodeById = useMemo(() => {
+    const map = new Map<string, CostCode>()
+    costCodes.forEach((code) => {
+      const id = code.id || code._id
+      if (id) map.set(id, code)
+    })
+    return map
+  }, [costCodes])
+
+  const costCodeOptions = useMemo(() => {
+    return [...costCodes].sort((a, b) => (a.code || '').localeCompare(b.code || ''))
+  }, [costCodes])
+
+  const staffOptions = useMemo(() => {
+    return [...staffPeople].filter((p) => !p.archivedAt).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+  }, [staffPeople])
+
+  const ironworkerOptions = useMemo(() => {
+    return [...ironworkers].filter((p) => !p.archivedAt).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+  }, [ironworkers])
+
+  const staffAssignable = useMemo(() => staffOptions.filter((p) => !!p.userId), [staffOptions])
+  const ironworkerAssignable = useMemo(() => ironworkerOptions.filter((p) => !!p.userId), [ironworkerOptions])
+
+  const superintendentOptions = useMemo(() => {
+    const combined = [...staffAssignable, ...ironworkerAssignable]
+    combined.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+    return combined
+  }, [staffAssignable, ironworkerAssignable])
+
+  const personLabelById = useMemo(() => {
+    const map = new Map<string, string>()
+    staffPeople.forEach((p) => {
+      const id = p.id || p._id
+      if (id) map.set(id, p.displayName || id)
+    })
+    ironworkers.forEach((p) => {
+      const id = p.id || p._id
+      if (id && !map.has(id)) map.set(id, p.displayName || id)
+    })
+    return map
+  }, [staffPeople, ironworkers])
+
   const refresh = () => setReloadAt(Date.now())
+
+  const updateEditProject = (patch: Partial<Project>) => {
+    setEditProject((prev) => (prev ? { ...prev, ...patch } : prev))
+  }
+
+  const updateBudgetField = (field: keyof ProjectBudget, value: number | string | null) => {
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const next = { ...(prev.budget || {}) }
+      next[field] = typeof value === 'string' ? (value ? value : null) : value
+      return { ...prev, budget: next }
+    })
+  }
+
+  const updateQuantityField = (
+    section: keyof ProjectQuantities,
+    field: string,
+    value: number | null
+  ) => {
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const quantities = { ...(prev.quantities || {}) }
+      const bucket = { ...(quantities[section] || {}) } as Record<string, number | null>
+      bucket[field] = value
+      quantities[section] = bucket
+      return { ...prev, quantities }
+    })
+  }
+
+  const updateStaffingField = (patch: Partial<ProjectStaffing>) => {
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const staffing = { ...(prev.staffing || {}) }
+      return { ...prev, staffing: { ...staffing, ...patch } }
+    })
+  }
+
+  const updateCostCodeBudget = (index: number, patch: Partial<ProjectCostCodeBudget>) => {
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const rows = Array.isArray(prev.costCodeBudgets) ? [...prev.costCodeBudgets] : []
+      const current = rows[index] || { costCodeId: '' }
+      rows[index] = { ...current, ...patch }
+      return { ...prev, costCodeBudgets: rows }
+    })
+  }
+
+  const addCostCodeBudgetRow = () => {
+    if (!newCostCodeId) return
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const rows = Array.isArray(prev.costCodeBudgets) ? [...prev.costCodeBudgets] : []
+      if (rows.some((row) => row.costCodeId === newCostCodeId)) return prev
+      rows.push({ costCodeId: newCostCodeId, budgetedHours: 0, costBudget: 0 })
+      return { ...prev, costCodeBudgets: rows }
+    })
+    setNewCostCodeId('')
+  }
+
+  const removeCostCodeBudgetRow = (index: number) => {
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const rows = Array.isArray(prev.costCodeBudgets) ? [...prev.costCodeBudgets] : []
+      rows.splice(index, 1)
+      return { ...prev, costCodeBudgets: rows }
+    })
+  }
+
+  const seedCostCodeBudgets = () => {
+    if (!costCodes.length) return
+    const active = costCodes.filter((code) => code.active)
+    setEditProject((prev) => {
+      if (!prev) return prev
+      const rows = active.map((code) => ({
+        costCodeId: code.id || code._id || '',
+        budgetedHours: 0,
+        costBudget: 0,
+      }))
+      return { ...prev, costCodeBudgets: rows.filter((row) => row.costCodeId) }
+    })
+  }
+
+  const toggleForeman = (personId: string) => {
+    updateStaffingField({
+      foremanPersonIds: Array.from(
+        new Set([
+          ...((editProject?.staffing?.foremanPersonIds || []) as string[]),
+          personId,
+        ])
+      ),
+    })
+  }
+
+  const removeForeman = (personId: string) => {
+    updateStaffingField({
+      foremanPersonIds: (editProject?.staffing?.foremanPersonIds || []).filter((id) => id !== personId),
+    })
+  }
 
   const persistQueue = (nextQueue: OfflineAction[]) => {
     setOfflineQueue(nextQueue)
@@ -184,6 +426,9 @@ export default function ProjectsPage() {
                 name: action.payload.name,
                 description: action.payload.description || undefined,
                 officeId: action.payload.officeId || undefined,
+                projectCode: action.payload.projectCode || undefined,
+                status: action.payload.status || undefined,
+                location: action.payload.location || undefined,
               }),
             })
             continue
@@ -239,6 +484,48 @@ export default function ProjectsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline])
+
+  useEffect(() => {
+    if (!selectedProject) return
+    const loadDetails = async () => {
+      setDetailLoading(true)
+      setDetailError(null)
+      try {
+        const results = await Promise.allSettled([
+          apiFetch<CostCode[] | { data: CostCode[] }>('/cost-codes?noPagination=true'),
+          apiFetch<ListResponse<PersonSummary> | PersonSummary[]>('/persons?personType=internal_staff&limit=200'),
+          apiFetch<ListResponse<PersonSummary> | PersonSummary[]>('/persons?personType=internal_union&limit=200'),
+        ])
+
+        const costCodesRes = results[0]
+        if (costCodesRes.status === 'fulfilled') {
+          const payload = costCodesRes.value as any
+          const rows = Array.isArray(payload) ? payload : payload?.data
+          setCostCodes(Array.isArray(rows) ? rows : [])
+        }
+
+        const staffRes = results[1]
+        if (staffRes.status === 'fulfilled') {
+          const payload = staffRes.value as any
+          const rows = Array.isArray(payload) ? payload : payload?.data
+          setStaffPeople(Array.isArray(rows) ? rows : [])
+        }
+
+        const ironRes = results[2]
+        if (ironRes.status === 'fulfilled') {
+          const payload = ironRes.value as any
+          const rows = Array.isArray(payload) ? payload : payload?.data
+          setIronworkers(Array.isArray(rows) ? rows : [])
+        }
+      } catch (err: any) {
+        setDetailError(err?.message || 'Unable to load project details data.')
+      } finally {
+        setDetailLoading(false)
+      }
+    }
+
+    void loadDetails()
+  }, [selectedProject?.id])
 
   useEffect(() => {
     const load = async () => {
@@ -340,12 +627,18 @@ export default function ProjectsPage() {
             name: trimmedName,
             description: description.trim() || undefined,
             officeId: officeId.trim() || undefined,
+            projectCode: projectCode.trim() || undefined,
+            status: projectStatus.trim() || undefined,
+            location: projectLocation.trim() || undefined,
           },
         })
         setActionMessage(`Queued "${trimmedName}" for sync when you're back online.`)
         setName('')
         setDescription('')
         setOfficeId('')
+        setProjectCode('')
+        setProjectStatus('')
+        setProjectLocation('')
         return
       }
 
@@ -355,12 +648,18 @@ export default function ProjectsPage() {
           name: trimmedName,
           description: description.trim() || undefined,
           officeId: officeId.trim() || undefined,
+          projectCode: projectCode.trim() || undefined,
+          status: projectStatus.trim() || undefined,
+          location: projectLocation.trim() || undefined,
         }),
       })
       setActionMessage(`Project "${trimmedName}" created.`)
       setName('')
       setDescription('')
       setOfficeId('')
+      setProjectCode('')
+      setProjectStatus('')
+      setProjectLocation('')
       refresh()
     } catch (err: any) {
       setError(err?.message || 'Unable to create project.')
@@ -394,13 +693,81 @@ export default function ProjectsPage() {
     }
   }
 
-  const closeDetails = () => setSelectedProject(null)
+  const handleSaveDetails = async () => {
+    if (!editProject || !selectedProjectId) return
+    setDetailSaving(true)
+    setDetailError(null)
+    try {
+      const trimmedName = editProject.name?.trim() || ''
+      if (!trimmedName) {
+        setDetailError('Project name is required.')
+        return
+      }
+      const budget = editProject.budget
+        ? {
+            hours: typeof editProject.budget.hours === 'number' ? editProject.budget.hours : null,
+            labourRate: typeof editProject.budget.labourRate === 'number' ? editProject.budget.labourRate : null,
+            currency: editProject.budget.currency || null,
+          }
+        : null
 
-  const openDetails = (project: Project) => setSelectedProject(project)
+      const payload = {
+        name: trimmedName,
+        description: editProject.description?.trim() || '',
+        officeId: editProject.officeId || null,
+        projectCode: editProject.projectCode || null,
+        status: editProject.status || null,
+        location: editProject.location || null,
+        bidDate: editProject.bidDate || null,
+        awardDate: editProject.awardDate || null,
+        fabricationStartDate: editProject.fabricationStartDate || null,
+        fabricationEndDate: editProject.fabricationEndDate || null,
+        erectionStartDate: editProject.erectionStartDate || null,
+        erectionEndDate: editProject.erectionEndDate || null,
+        completionDate: editProject.completionDate || null,
+        budget,
+        quantities: editProject.quantities || null,
+        staffing: editProject.staffing || null,
+        costCodeBudgets: editProject.costCodeBudgets || [],
+      }
 
-  const selectedProjectId = selectedProject?.id || selectedProject?._id || ''
-  const selectedOffice = selectedProject?.officeId ? officeMap.get(selectedProject.officeId) : null
-  const selectedOfficeLabel = selectedOffice ? selectedOffice.name : selectedProject?.officeId ? selectedProject.officeId : '-'
+      const updated = await apiFetch<Project>(`/projects/${selectedProjectId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      })
+      setSelectedProject(updated)
+      setEditProject(JSON.parse(JSON.stringify(updated)) as Project)
+      setActionMessage('Project updated.')
+      refresh()
+    } catch (err: any) {
+      setDetailError(err?.message || 'Unable to update project.')
+    } finally {
+      setDetailSaving(false)
+    }
+  }
+
+  const closeDetails = () => {
+    setSelectedProject(null)
+    setEditProject(null)
+    setDetailError(null)
+    setNewCostCodeId('')
+  }
+
+  const openDetails = (project: Project) => {
+    setSelectedProject(project)
+    setEditProject(JSON.parse(JSON.stringify(project)) as Project)
+    setDetailError(null)
+  }
+
+  const detailProject = editProject || selectedProject
+  const selectedProjectId = detailProject?.id || detailProject?._id || ''
+  const selectedOffice = detailProject?.officeId ? officeMap.get(detailProject.officeId) : null
+  const selectedOfficeLabel = selectedOffice ? selectedOffice.name : detailProject?.officeId ? detailProject.officeId : '-'
+  const detailDisabled = !canManageProjects || detailSaving || orgBlocked || !!detailProject?.legalHold || !isOnline
+  const budgetAmount =
+    typeof editProject?.budget?.hours === 'number' && typeof editProject?.budget?.labourRate === 'number'
+      ? editProject.budget.hours * editProject.budget.labourRate
+      : null
 
   return (
     <section className="dashboard-grid">
@@ -436,7 +803,7 @@ export default function ProjectsPage() {
 
             {canViewOrgDetails && orgArchived && (
               <div className="feedback error">
-                This organization is archived. Project changes may be restricted. Contact a platform admin if you need access restored.
+                This organization is archived. Project changes may be restricted. Contact Platform Ops if you need access restored.
               </div>
             )}
 
@@ -457,6 +824,45 @@ export default function ProjectsPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
+                      disabled={submitting || orgBlocked}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-sm font-semibold text-[color:var(--text)]">
+                    Project code
+                    <input
+                      name="projectCode"
+                      type="text"
+                      placeholder="Optional"
+                      className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
+                      value={projectCode}
+                      onChange={(e) => setProjectCode(e.target.value)}
+                      disabled={submitting || orgBlocked}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-sm font-semibold text-[color:var(--text)]">
+                    Status
+                    <input
+                      name="status"
+                      type="text"
+                      placeholder="e.g., bidding, awarded"
+                      className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
+                      value={projectStatus}
+                      onChange={(e) => setProjectStatus(e.target.value)}
+                      disabled={submitting || orgBlocked}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-sm font-semibold text-[color:var(--text)] lg:col-span-2">
+                    Location
+                    <input
+                      name="location"
+                      type="text"
+                      placeholder="e.g., 1200 Main St, Montreal"
+                      className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
+                      value={projectLocation}
+                      onChange={(e) => setProjectLocation(e.target.value)}
                       disabled={submitting || orgBlocked}
                     />
                   </label>
@@ -587,6 +993,8 @@ export default function ProjectsPage() {
                 <thead className="bg-white/5 text-left text-muted-foreground">
                   <tr>
                     <th className="px-4 py-2">Name</th>
+                    <th className="px-4 py-2">Code</th>
+                    <th className="px-4 py-2">Status</th>
                     <th className="px-4 py-2">Office</th>
                     <th className="px-4 py-2">Created</th>
                     <th className="px-4 py-2">Archived</th>
@@ -604,6 +1012,8 @@ export default function ProjectsPage() {
                     return (
                       <tr key={id || project.name} className={cn('border-t border-border/60')}>
                         <td className="px-4 py-2 font-medium text-[color:var(--text)]">{project.name}</td>
+                        <td className="px-4 py-2 text-[color:var(--text)]">{project.projectCode || '-'}</td>
+                        <td className="px-4 py-2 text-[color:var(--text)]">{project.status || '-'}</td>
                         <td className="px-4 py-2 text-[color:var(--text)]">{officeLabel}</td>
                         <td className="px-4 py-2 text-muted-foreground">{formatDate(project.createdAt)}</td>
                         <td className="px-4 py-2 text-[color:var(--text)]">{archived ? 'Yes' : 'No'}</td>
@@ -627,7 +1037,7 @@ export default function ProjectsPage() {
                   })}
                   {!loading && projects.length === 0 && (
                     <tr>
-                      <td className="px-4 py-4 text-muted-foreground" colSpan={5}>
+                      <td className="px-4 py-4 text-muted-foreground" colSpan={7}>
                         No projects found.
                       </td>
                     </tr>
@@ -645,20 +1055,23 @@ export default function ProjectsPage() {
         )}
       </section>
 
-      {selectedProject && (
+      {selectedProject && detailProject && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-[color:var(--panel)] border border-border p-6 space-y-4 shadow-card">
+          <div className="w-full max-w-5xl rounded-2xl bg-[color:var(--panel)] border border-border p-6 space-y-5 shadow-card overflow-y-auto max-h-[90vh]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-lg font-semibold text-[color:var(--text)] truncate">{selectedProject.name}</div>
-                <div className="text-sm text-muted-foreground">Project details and compliance flags.</div>
+                <div className="text-lg font-semibold text-[color:var(--text)] truncate">{detailProject.name}</div>
+                <div className="text-sm text-muted-foreground">Project scope, staffing, and cost code budgets.</div>
               </div>
               <button className="btn secondary" type="button" onClick={closeDetails}>
                 Close
               </button>
             </div>
 
-            {selectedProject.legalHold && (
+            {detailError && <div className="feedback error">{detailError}</div>}
+            {detailLoading && <div className="feedback subtle">Loading staffing + cost code data.</div>}
+
+            {detailProject.legalHold && (
               <div className="feedback error">This project is on legal hold. Destructive actions are blocked.</div>
             )}
 
@@ -676,30 +1089,488 @@ export default function ProjectsPage() {
                 <div className="stat-value">{selectedProjectId || '-'}</div>
               </div>
               <div className="info-block">
+                <div className="muted">Project code</div>
+                <div className="stat-value">{detailProject.projectCode || '-'}</div>
+              </div>
+              <div className="info-block">
+                <div className="muted">Status</div>
+                <div className="stat-value">{detailProject.status || '-'}</div>
+              </div>
+              <div className="info-block">
                 <div className="muted">Office</div>
                 <div className="stat-value">{selectedOfficeLabel}</div>
               </div>
               <div className="info-block">
                 <div className="muted">Created</div>
-                <div className="stat-value">{selectedProject.createdAt ? new Date(selectedProject.createdAt).toLocaleString() : '-'}</div>
+                <div className="stat-value">{detailProject.createdAt ? new Date(detailProject.createdAt).toLocaleString() : '-'}</div>
               </div>
               <div className="info-block">
                 <div className="muted">Archived</div>
-                <div className="stat-value">{selectedProject.archivedAt ? new Date(selectedProject.archivedAt).toLocaleString() : 'No'}</div>
+                <div className="stat-value">{detailProject.archivedAt ? new Date(detailProject.archivedAt).toLocaleString() : 'No'}</div>
               </div>
               <div className="info-block">
                 <div className="muted">Legal hold</div>
-                <div className="stat-value">{selectedProject.legalHold ? 'On' : 'Off'}</div>
+                <div className="stat-value">{detailProject.legalHold ? 'On' : 'Off'}</div>
               </div>
               <div className="info-block">
                 <div className="muted">PII stripped</div>
-                <div className="stat-value">{selectedProject.piiStripped ? 'Yes' : 'No'}</div>
+                <div className="stat-value">{detailProject.piiStripped ? 'Yes' : 'No'}</div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-2">
-              <div className="text-sm font-semibold text-[color:var(--text)]">Description</div>
-              <div className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedProject.description?.trim() || '-'}</div>
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="text-sm font-semibold text-[color:var(--text)]">Basics</div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Project name</span>
+                  <input
+                    value={editProject?.name || detailProject.name}
+                    onChange={(e) => updateEditProject({ name: e.target.value })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Project code</span>
+                  <input
+                    value={editProject?.projectCode || ''}
+                    onChange={(e) => updateEditProject({ projectCode: e.target.value })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Status</span>
+                  <input
+                    value={editProject?.status || ''}
+                    onChange={(e) => updateEditProject({ status: e.target.value })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Location</span>
+                  <input
+                    value={editProject?.location || ''}
+                    onChange={(e) => updateEditProject({ location: e.target.value })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm md:col-span-2">
+                  <span className="font-semibold">Org location</span>
+                  <select
+                    value={editProject?.officeId || ''}
+                    onChange={(e) => updateEditProject({ officeId: e.target.value || null })}
+                    disabled={detailDisabled}
+                  >
+                    <option value="">Unassigned</option>
+                    {offices.map((office) => {
+                      const id = office.id || office._id || ''
+                      if (!id) return null
+                      return (
+                        <option key={id} value={id} disabled={!!office.archivedAt}>
+                          {office.name}
+                          {office.archivedAt ? ' (archived)' : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                </label>
+                <label className="space-y-1 text-sm md:col-span-2">
+                  <span className="font-semibold">Description</span>
+                  <textarea
+                    rows={3}
+                    value={editProject?.description || ''}
+                    onChange={(e) => updateEditProject({ description: e.target.value })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="text-sm font-semibold text-[color:var(--text)]">Schedule</div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Bid date</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.bidDate)}
+                    onChange={(e) => updateEditProject({ bidDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Award date</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.awardDate)}
+                    onChange={(e) => updateEditProject({ awardDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Fabrication start</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.fabricationStartDate)}
+                    onChange={(e) => updateEditProject({ fabricationStartDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Fabrication end</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.fabricationEndDate)}
+                    onChange={(e) => updateEditProject({ fabricationEndDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Erection start</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.erectionStartDate)}
+                    onChange={(e) => updateEditProject({ erectionStartDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Erection end</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.erectionEndDate)}
+                    onChange={(e) => updateEditProject({ erectionEndDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Completion</span>
+                  <input
+                    type="date"
+                    value={toDateInputValue(editProject?.completionDate)}
+                    onChange={(e) => updateEditProject({ completionDate: e.target.value || null })}
+                    disabled={detailDisabled}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="text-sm font-semibold text-[color:var(--text)]">Budget</div>
+              <div className="grid gap-3 md:grid-cols-4">
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Hours</span>
+                  <input
+                    type="number"
+                    value={editProject?.budget?.hours ?? ''}
+                    onChange={(e) => updateBudgetField('hours', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Labour rate</span>
+                  <input
+                    type="number"
+                    value={editProject?.budget?.labourRate ?? ''}
+                    onChange={(e) => updateBudgetField('labourRate', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Currency</span>
+                  <input
+                    value={editProject?.budget?.currency || ''}
+                    onChange={(e) => updateBudgetField('currency', e.target.value)}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <div className="space-y-1 text-sm">
+                  <div className="font-semibold">Amount</div>
+                  <div className="rounded-xl border border-border/60 bg-white/5 px-3 py-2">
+                    {budgetAmount !== null ? budgetAmount.toFixed(2) : '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="text-sm font-semibold text-[color:var(--text)]">Quantities</div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Structural tonnage</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.structural?.tonnage ?? ''}
+                    onChange={(e) => updateQuantityField('structural', 'tonnage', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Structural pieces</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.structural?.pieces ?? ''}
+                    onChange={(e) => updateQuantityField('structural', 'pieces', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Misc metals tonnage</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.miscMetals?.tonnage ?? ''}
+                    onChange={(e) => updateQuantityField('miscMetals', 'tonnage', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Misc metals pieces</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.miscMetals?.pieces ?? ''}
+                    onChange={(e) => updateQuantityField('miscMetals', 'pieces', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Metal deck pieces</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.metalDeck?.pieces ?? ''}
+                    onChange={(e) => updateQuantityField('metalDeck', 'pieces', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Metal deck sqft</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.metalDeck?.sqft ?? ''}
+                    onChange={(e) => updateQuantityField('metalDeck', 'sqft', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">CLT panels pieces</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.cltPanels?.pieces ?? ''}
+                    onChange={(e) => updateQuantityField('cltPanels', 'pieces', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">CLT panels sqft</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.cltPanels?.sqft ?? ''}
+                    onChange={(e) => updateQuantityField('cltPanels', 'sqft', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Glulam volume (m³)</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.glulam?.volumeM3 ?? ''}
+                    onChange={(e) => updateQuantityField('glulam', 'volumeM3', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Glulam pieces</span>
+                  <input
+                    type="number"
+                    value={editProject?.quantities?.glulam?.pieces ?? ''}
+                    onChange={(e) => updateQuantityField('glulam', 'pieces', toNumberOrNull(e.target.value))}
+                    disabled={detailDisabled}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="text-sm font-semibold text-[color:var(--text)]">Staffing</div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Project manager</span>
+                  <select
+                    value={editProject?.staffing?.projectManagerPersonId || ''}
+                    onChange={(e) => updateStaffingField({ projectManagerPersonId: e.target.value || null })}
+                    disabled={detailDisabled}
+                  >
+                    <option value="">Unassigned</option>
+                    {staffAssignable.map((person) => {
+                      const pid = person.id || person._id
+                      if (!pid) return null
+                      return (
+                        <option key={pid} value={pid}>
+                          {person.displayName}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <div className="muted">PMs must be staff with user access.</div>
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-semibold">Superintendent</span>
+                  <select
+                    value={editProject?.staffing?.superintendentPersonId || ''}
+                    onChange={(e) => updateStaffingField({ superintendentPersonId: e.target.value || null })}
+                    disabled={detailDisabled}
+                  >
+                    <option value="">Unassigned</option>
+                    {superintendentOptions.map((person) => {
+                      const pid = person.id || person._id
+                      if (!pid) return null
+                      return (
+                        <option key={pid} value={pid}>
+                          {person.displayName}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <div className="muted">Superintendents can be staff or ironworkers with user access.</div>
+                </label>
+                <div className="space-y-2 md:col-span-2">
+                  <div className="text-sm font-semibold">Foremen</div>
+                  {ironworkerAssignable.length === 0 ? (
+                    <div className="muted text-sm">No ironworkers with user accounts available.</div>
+                  ) : (
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {ironworkerAssignable.map((person) => {
+                        const pid = person.id || person._id
+                        if (!pid) return null
+                        const selected = (editProject?.staffing?.foremanPersonIds || []).includes(pid)
+                        return (
+                          <label key={pid} className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={(e) => {
+                                if (e.target.checked) toggleForeman(pid)
+                                else removeForeman(pid)
+                              }}
+                              disabled={detailDisabled}
+                            />
+                            {person.displayName}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <div className="muted">Foremen must be ironworkers with user access.</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-sm font-semibold text-[color:var(--text)]">Cost code budgets</div>
+                <div className="flex gap-2">
+                  <button type="button" className="btn secondary" onClick={seedCostCodeBudgets} disabled={detailDisabled}>
+                    Seed active codes
+                  </button>
+                </div>
+              </div>
+
+              {Array.isArray(editProject?.costCodeBudgets) && editProject.costCodeBudgets.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="table w-full">
+                    <thead>
+                      <tr>
+                        <th>Cost code</th>
+                        <th>Budgeted hours</th>
+                        <th>Cost budget</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {editProject.costCodeBudgets.map((row, idx) => {
+                        const code = costCodeById.get(row.costCodeId)
+                        const label = code ? `${code.category} • ${code.code} — ${code.description}` : row.costCodeId
+                        return (
+                          <tr key={`${row.costCodeId}-${idx}`}>
+                            <td className="text-sm">{label || '-'}</td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.budgetedHours ?? ''}
+                                onChange={(e) => updateCostCodeBudget(idx, { budgetedHours: toNumberOrNull(e.target.value) })}
+                                disabled={detailDisabled}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                value={row.costBudget ?? ''}
+                                onChange={(e) => updateCostCodeBudget(idx, { costBudget: toNumberOrNull(e.target.value) })}
+                                disabled={detailDisabled}
+                              />
+                            </td>
+                            <td className="text-right">
+                              <button type="button" className="btn secondary" onClick={() => removeCostCodeBudgetRow(idx)} disabled={detailDisabled}>
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="muted text-sm">No cost code budgets yet.</div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <select value={newCostCodeId} onChange={(e) => setNewCostCodeId(e.target.value)} disabled={detailDisabled}>
+                  <option value="">Add cost code…</option>
+                  {costCodeOptions.map((code) => {
+                    const id = code.id || code._id
+                    if (!id) return null
+                    return (
+                      <option key={id} value={id}>
+                        {code.category} • {code.code} — {code.description}
+                      </option>
+                    )
+                  })}
+                </select>
+                <button type="button" className="btn secondary" onClick={addCostCodeBudgetRow} disabled={detailDisabled || !newCostCodeId}>
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-white/5 p-4 space-y-3">
+              <div className="text-sm font-semibold text-[color:var(--text)]">Seat assignments</div>
+              {detailProject.seatAssignments && detailProject.seatAssignments.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="table w-full">
+                    <thead>
+                      <tr>
+                        <th>Person</th>
+                        <th>Role</th>
+                        <th>Seat</th>
+                        <th>Assigned</th>
+                        <th>Removed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailProject.seatAssignments.map((row, idx) => (
+                        <tr key={`${row.seatId}-${idx}`}>
+                          <td>{row.personId ? personLabelById.get(row.personId) || row.personId : '-'}</td>
+                          <td>{row.role || '-'}</td>
+                          <td>{row.seatId}</td>
+                          <td>{row.assignedAt ? new Date(row.assignedAt).toLocaleString() : '-'}</td>
+                          <td>{row.removedAt ? new Date(row.removedAt).toLocaleString() : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="muted text-sm">No seat assignments yet.</div>
+              )}
             </div>
 
             <div className="flex flex-wrap justify-end gap-2">
@@ -716,22 +1587,24 @@ export default function ProjectsPage() {
                 <button
                   className="btn secondary"
                   type="button"
-                  disabled={!!selectedProject.legalHold || orgBlocked}
+                  disabled={!!detailProject.legalHold || orgBlocked}
                   onClick={async () => {
-                    await handleArchiveToggle(selectedProjectId, !!selectedProject.archivedAt)
+                    await handleArchiveToggle(selectedProjectId, !!detailProject.archivedAt)
                     closeDetails()
                   }}
                 >
-                  {selectedProject.archivedAt ? 'Restore project' : 'Archive project'}
+                  {detailProject.archivedAt ? 'Restore project' : 'Archive project'}
                 </button>
               ) : null}
-              <button className="btn primary" type="button" onClick={closeDetails}>
-                Done
-              </button>
+              {canManageProjects ? (
+                <button className="btn primary" type="button" onClick={handleSaveDetails} disabled={detailDisabled}>
+                  {detailSaving ? 'Saving.' : 'Save changes'}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
       )}
-    </section>
+
   )
 }

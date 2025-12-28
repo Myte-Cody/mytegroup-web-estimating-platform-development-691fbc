@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Mail, Users } from 'lucide-react'
 import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { cn } from '../lib/utils'
 import { apiFetch } from '../lib/api'
@@ -21,6 +22,7 @@ const FALLBACK_WAITLIST_COUNT = process.env.NEXT_PUBLIC_WAITLIST_COUNT_DISPLAY |
 const FALLBACK_FREE_SEATS_PER_ORG = process.env.NEXT_PUBLIC_FREE_SEATS_PER_ORG || '5'
 
 export default function WaitlistSection({ id = 'cta', className }: Props) {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -49,6 +51,10 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
   )
 
   const phoneIsValid = useMemo(() => /^\+[1-9]\d{1,14}$/.test(phone.trim()), [phone])
+  const phoneError = useMemo(() => {
+    if (!phone.trim()) return null
+    return phoneIsValid ? null : 'Phone must be in E.164 format, e.g. +15145551234.'
+  }, [phone, phoneIsValid])
   const canSubmit = name.trim() !== '' && email.trim() !== '' && role.trim() !== '' && phoneIsValid && !loading
   const verifyHref = useMemo(() => {
     const normalized = email.trim()
@@ -111,6 +117,9 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
       setSuccess(true)
       setWaitlistStatus(res?.status || null)
       trackEvent('waitlist_submit', { email, role, preCreateAccount, marketingConsent })
+      if (['verification_sent', 'email_verification_sent', 'phone_verification_sent'].includes(res?.status || '')) {
+        setTimeout(() => router.push(verifyHref), 350)
+      }
     } catch (err: any) {
       setError(err?.message || 'Unable to join the waitlist right now. Please try again.')
     } finally {
@@ -204,12 +213,14 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                   placeholder="+15145551234"
                   className="w-full rounded-xl border border-border/60 bg-white/5 px-3 py-2 text-base text-[var(--text)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[var(--accent)]"
                   aria-required="true"
+                  aria-invalid={!!phoneError}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
                 <span className="text-xs font-normal text-muted-foreground">
                   Use E.164 format (include country code). We send a 6-digit SMS code.
                 </span>
+                {phoneError && <span className="text-xs text-[color:var(--danger)]">{phoneError}</span>}
               </label>
                 <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--text)] md:col-span-2">
                   Role
@@ -261,6 +272,11 @@ export default function WaitlistSection({ id = 'cta', className }: Props) {
                   >
                     {loading ? 'Saving...' : success ? "You're in the queue" : 'Join the waitlist'}
                   </button>
+                  {!canSubmit && (
+                    <span className="text-xs text-muted-foreground">
+                      Enter your full name, work email, role, and an E.164 phone to continue.
+                    </span>
+                  )}
                 </div>
               </form>
               {error && <div className="feedback error">{error}</div>}

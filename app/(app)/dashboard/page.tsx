@@ -105,9 +105,9 @@ const ROLE_ORDER = [
 ]
 
 const ROLE_LABELS: Record<string, string> = {
-  superadmin: 'Super Admin',
-  platform_admin: 'Platform Admin',
-  org_owner: 'Org Owner',
+  superadmin: 'Super Admin (break-glass)',
+  platform_admin: 'Platform Ops',
+  org_owner: 'Org Admin (Owner)',
   org_admin: 'Org Admin',
   admin: 'Admin',
   manager: 'Manager',
@@ -241,7 +241,7 @@ export default function DashboardPage() {
             }
             return
           }
-          setError('Your session is missing an organization scope. Ask a platform admin to assign you to an org.')
+          setError('Your session is missing an organization scope. Ask Platform Ops to assign you to an org.')
           return
         }
 
@@ -351,7 +351,7 @@ export default function DashboardPage() {
             </p>
 
             {orgChoices.length === 0 ? (
-              <div className="muted">No organizations found. Create one in the Platform Admin view.</div>
+              <div className="muted">No organizations found. Create one in the Platform Ops view.</div>
             ) : (
               <div className="grid gap-2 md:grid-cols-2">
                 {orgChoices.map((choice) => {
@@ -405,7 +405,7 @@ export default function DashboardPage() {
         {hasAdminDashboard && orgArchivedAt && (
           <div className="feedback error">
             This organization is archived (since {formatTimestamp(orgArchivedAt)}). Access may be limited. Contact a
-            platform admin if you need it restored.
+            Platform Ops if you need it restored.
           </div>
         )}
 

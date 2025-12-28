@@ -77,7 +77,7 @@ export default function PlatformLayout({ children }: { children: ReactNode }) {
     <div className="workspace-root">
       <div className="workspace-brand-chip" onClick={() => router.push('/platform')}>
         <span className="workspace-brand-logo">MYTE</span>
-        <span className="workspace-brand-text">Platform Admin</span>
+        <span className="workspace-brand-text">Platform Ops</span>
       </div>
 
       <aside
@@ -101,7 +101,7 @@ export default function PlatformLayout({ children }: { children: ReactNode }) {
             {!drawerCollapsed && (
               <div className="workspace-org-meta">
                 <div className="workspace-org-name">Platform</div>
-                <div className="workspace-org-id">Seeded admin only</div>
+                <div className="workspace-org-id">Ops access only</div>
               </div>
             )}
           </div>

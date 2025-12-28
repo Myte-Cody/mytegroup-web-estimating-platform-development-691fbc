@@ -74,7 +74,7 @@ export default function PlatformOrganizationsPage() {
         const message =
           err instanceof ApiError
             ? err.status === 401 || err.status === 403
-              ? 'You need a Platform Admin session to view organizations.'
+              ? 'You need a Platform Ops session to view organizations.'
               : err.message
             : 'Unable to load organizations.'
         setError(message)
@@ -92,7 +92,7 @@ export default function PlatformOrganizationsPage() {
   return (
     <section className="dashboard-grid">
       <section className="glass-card">
-        <div className="badge">Platform admin</div>
+        <div className="badge">Platform Ops</div>
         <h1>Organizations</h1>
         <p className="subtitle">
           Platform-level view of tenant organizations. Connection URIs are intentionally redacted.
@@ -254,4 +254,3 @@ export default function PlatformOrganizationsPage() {
     </section>
   )
 }
-

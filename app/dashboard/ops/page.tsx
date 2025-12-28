@@ -26,7 +26,7 @@ export default function OpsDashboard() {
         const currentRole = me?.user?.role || null
         setRole(currentRole)
         if (!currentRole || !PLATFORM_ROLES.includes(currentRole)) {
-          setError('Platform admin access required.')
+          setError('Platform Ops access required.')
           setLoading(false)
           return
         }
