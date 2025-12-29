@@ -71,14 +71,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     load()
   }, [router])
 
-  const primaryRole = user?.role || 'user'
+  const roleFallback = (user?.roles || []).includes('superadmin')
+    ? 'superadmin'
+    : (user?.roles || [])[0]
+  const primaryRole = user?.role || roleFallback || 'user'
 
   const visibleNavItems = useMemo(() => {
     return NAV_ITEMS.filter((item) => {
       return hasAnyRole(user, item.roles)
     })
   }, [user])
-  const showPlatformBridge = user?.role === 'platform_admin'
+  const showPlatformBridge = hasAnyRole(user, ['platform_admin'])
 
   return (
     <div className="workspace-root">

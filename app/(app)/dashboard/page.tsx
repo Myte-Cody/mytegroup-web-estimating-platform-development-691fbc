@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiError, apiFetch } from '../../lib/api'
+import { hasAnyRole } from '../../lib/rbac'
 import { cn } from '../../lib/utils'
 
 type SessionUser = {
@@ -163,8 +164,11 @@ export default function DashboardPage() {
   const [auditError, setAuditError] = useState<string | null>(null)
   const [reloadAt, setReloadAt] = useState(0)
 
-  const primaryRole = user?.role || 'user'
-  const hasAdminDashboard = FULL_DASHBOARD_ROLES.includes(primaryRole)
+  const roleFallback = (user?.roles || []).includes('superadmin')
+    ? 'superadmin'
+    : (user?.roles || [])[0]
+  const primaryRole = user?.role || roleFallback || 'user'
+  const hasAdminDashboard = hasAnyRole(user, FULL_DASHBOARD_ROLES)
 
   const userStats = useMemo(() => {
     const total = users.length

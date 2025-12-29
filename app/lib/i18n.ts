@@ -371,9 +371,6 @@ const applyLanguage = (language: Language) => {
   if (typeof document === 'undefined') return
   document.documentElement.dataset.lang = language
   document.documentElement.lang = language
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('myte-lang-change', { detail: language }))
-  }
 }
 
 const interpolate = (template: string, vars?: Record<string, string | number>) => {
@@ -395,23 +392,14 @@ export const useLanguage = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const handleChange = (event: Event) => {
-      const detail = (event as CustomEvent<string>).detail
-      if (!detail) return
-      const next = normalizeLanguage(detail)
-      setLanguageState(next)
-      applyLanguage(next)
-    }
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== LANGUAGE_KEY) return
       const next = normalizeLanguage(event.newValue || 'en')
       setLanguageState(next)
       applyLanguage(next)
     }
-    window.addEventListener('myte-lang-change', handleChange as EventListener)
     window.addEventListener('storage', handleStorage)
     return () => {
-      window.removeEventListener('myte-lang-change', handleChange as EventListener)
       window.removeEventListener('storage', handleStorage)
     }
   }, [])
