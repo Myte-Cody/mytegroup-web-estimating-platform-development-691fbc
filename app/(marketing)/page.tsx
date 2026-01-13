@@ -45,15 +45,6 @@ export default function LandingPage() {
           animate="visible"
           variants={stagger}
         >
-          <div
-            className="pointer-events-none absolute inset-0 -z-10 opacity-25"
-            style={{
-              backgroundImage: "url('/landing/hero-nature.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-            aria-hidden
-          />
           <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[#0b1224]/20 via-transparent to-[#0b1224]/80" aria-hidden />
           <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div className="space-y-5" variants={fadeIn}>
